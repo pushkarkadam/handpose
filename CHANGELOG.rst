@@ -16,3 +16,4 @@ Added
 ^^^^^
 - Function to load variables from a yaml file.
 - Read labels from text file function ``read_labels()`` added to ``dataset.py``.
+- Read files from directory function ``list_files()`` added to ``dataset.py``.

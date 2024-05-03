@@ -1,3 +1,5 @@
+import os
+
 def read_labels(file_path):
     """Reads the labels from text file.
     
@@ -29,3 +31,32 @@ def read_labels(file_path):
         print(e)
         
     return labels
+
+def list_files(directory):
+    """Reads the label files.
+
+    Parameters
+    ----------
+    directory: str
+        Path to the directory
+
+    Returns
+    -------
+    list
+
+    Examples
+    --------
+    >>> handpose.dataset.list_files('directory')
+    
+    """
+
+    file_names = []
+
+    try:
+        files = os.listdir(directory)
+
+        file_names = [f for f in files if os.path.isfile(os.path.join(directory, f))]
+    except Exception as e:
+        print(e)
+        
+    return file_names
