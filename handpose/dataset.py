@@ -9,6 +9,10 @@ def read_labels(file_path):
     Returns
     -------
     list
+
+    Examples
+    --------
+    >>> labels = handpose.dataset.read_labels('label.txt')
     
     """
     labels = []

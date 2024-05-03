@@ -12,6 +12,10 @@ def load_variables(file_path):
     -------
     dict
 
+    Examples
+    --------
+    >>> variables = handpose.helpers.load_variables('config.yaml')
+
     """
     try:
         with open(file_path, 'r') as file:
