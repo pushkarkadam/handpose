@@ -15,3 +15,4 @@ and this project adheres to `Semantic Versioning`_.
 Added
 ^^^^^
 - Function to load variables from a yaml file.
+- Read labels from text file function ``read_labels()`` added to ``dataset.py``.
