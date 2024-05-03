@@ -29,6 +29,7 @@ def read_labels(file_path):
                 labels.append(line_num)
     except Exception as e:
         print(e)
+        raise
         
     return labels
 
@@ -58,5 +59,6 @@ def list_files(directory):
         file_names = [f for f in files if os.path.isfile(os.path.join(directory, f))]
     except Exception as e:
         print(e)
+        raise
         
     return file_names

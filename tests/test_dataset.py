@@ -12,9 +12,8 @@ def test_read_labels():
     assert(len(labels[0]) == 4)
     assert(type(labels[0][0]) == float)
 
-    text_file_path = 'no_file_exists.txt'
     with pytest.raises(Exception) as e:
-        labels = handpose.dataset.read_labels(text_file_path2)
+        labels = handpose.dataset.read_labels('no_file_exists.txt')
 
 def test_list_files():
     test_directory = 'tests/test_labels'
@@ -23,3 +22,6 @@ def test_list_files():
 
     assert(len(directories) == 2)
     assert(type(directories[0]) == str)
+
+    with pytest.raises(Exception) as e:
+        directories = handpose.dataset.list_files('no_dir_exists')

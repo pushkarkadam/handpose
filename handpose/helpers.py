@@ -22,5 +22,6 @@ def load_variables(file_path):
             variables = yaml.safe_load(file)
     except Exception as e:
         print(e)
+        raise
 
     return variables
