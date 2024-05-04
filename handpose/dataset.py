@@ -1,7 +1,7 @@
 import os
 import torch
 
-def read_labels(file_path):
+def read_label(file_path):
     """Reads the labels from text file.
     
     Parameters
@@ -15,7 +15,7 @@ def read_labels(file_path):
 
     Examples
     --------
-    >>> labels = handpose.dataset.read_labels('label.txt')
+    >>> labels = handpose.dataset.read_label('label.txt')
     
     """
     labels = []
