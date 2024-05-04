@@ -1,4 +1,5 @@
 import os
+import torch
 
 def read_labels(file_path):
     """Reads the labels from text file.
@@ -31,7 +32,7 @@ def read_labels(file_path):
         print(e)
         raise
         
-    return labels
+    return torch.Tensor(labels)
 
 def list_files(directory):
     """Reads the label files.
