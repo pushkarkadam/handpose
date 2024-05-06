@@ -63,3 +63,34 @@ def list_files(directory):
         raise
         
     return file_names
+
+def split_label_tensor(tensor):
+    """Splits ``(N,n)`` tensor to ``(N,1,n)`` and returns a list of ``(1,n)`` tensors with ``N`` elements.
+
+    For image that has multiple detection, the labels are on ``N`` lines.
+    The read_labels function read these ``N`` lines and converts them into a tensor
+    of size (N, n) where ``N`` is the number of detected objects and ``n`` is the annotation.
+    These ``N`` detections are to be returned as a list of ``N`` element where each element is
+    a tensor of size ``(1,n)``.
+
+    Parameters
+    ----------
+    tensor: torch.Tensor
+        A torch tensor with the labels.
+
+    Returns
+    -------
+    list
+        A list of split tensor labels.
+
+    Examples
+    --------
+    >>> t = torch.randn(2,5)
+    >>> split_label_tensor(t)
+    
+    """
+    split_tensor = tensor.unsqueeze(1)
+
+    labels = [split_tensor[0] for st in split_tensor]
+
+    return labels

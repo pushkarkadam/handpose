@@ -31,3 +31,15 @@ def test_list_files():
 
     with pytest.raises(Exception) as e:
         directories = handpose.dataset.list_files('no_dir_exists')
+
+def test_split_label_tensor():
+    tensor1 = torch.randn(2,5)
+    tensor2 = torch.randn(1,5)
+
+    s1 = handpose.dataset.split_label_tensor(tensor1)
+    s2 = handpose.dataset.split_label_tensor(tensor2)
+
+    assert(len(s1) == 2)
+    assert(len(s2) == 1)
+    assert(s1[0].shape == (1, 5))
+    assert(s2[0].shape == (1, 5))
