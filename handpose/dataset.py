@@ -91,6 +91,9 @@ def split_label_tensor(tensor):
     """
     split_tensor = tensor.unsqueeze(1)
 
-    labels = [split_tensor[0] for st in split_tensor]
+    labels = []
+
+    for st in split_tensor:
+        labels.append(st)
 
     return labels

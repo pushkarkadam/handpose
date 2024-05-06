@@ -36,10 +36,15 @@ def test_split_label_tensor():
     tensor1 = torch.randn(2,5)
     tensor2 = torch.randn(1,5)
 
+    tensor3 = torch.Tensor([[1,2,3,4], [5,6,7,8]])
+
     s1 = handpose.dataset.split_label_tensor(tensor1)
     s2 = handpose.dataset.split_label_tensor(tensor2)
+    s3 = handpose.dataset.split_label_tensor(tensor3)
 
     assert(len(s1) == 2)
     assert(len(s2) == 1)
     assert(s1[0].shape == (1, 5))
     assert(s2[0].shape == (1, 5))
+    torch.testing.assert_close(s3[0],torch.Tensor([[1,2,3,4]]))
+    torch.testing.assert_close(s3[1],torch.Tensor([[5,6,7,8]]))
