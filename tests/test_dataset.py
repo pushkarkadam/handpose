@@ -48,3 +48,15 @@ def test_split_label_tensor():
     assert(s2[0].shape == (1, 5))
     torch.testing.assert_close(s3[0],torch.Tensor([[1,2,3,4]]))
     torch.testing.assert_close(s3[1],torch.Tensor([[5,6,7,8]]))
+
+def test_label_tensor():
+    label = torch.Tensor([[1,0.5,0.5,0.5,0.5,0.5,0.6],[0,0.7,0.8,0.2,0.1, 0.2,0.3]])
+
+    t1 = handpose.dataset.label_tensor(label, S=3, nc=2, nkpt=1, cell_relative=True, nkpt_conf=False)
+    t2 = handpose.dataset.label_tensor(label, S=3, nc=2, nkpt=1, cell_relative=True, nkpt_conf=True)
+    ch = torch.Tensor([[0,0,0],[0,1,0],[0,0,1]])
+
+    assert(t1.shape == (9, 3, 3))
+    assert(t2.shape == (10, 3, 3))
+    torch.testing.assert_close(t1[0], ch)
+    torch.testing.assert_close(t2[0], ch)
