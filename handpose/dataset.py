@@ -69,7 +69,7 @@ def split_label_tensor(tensor):
 
     For image that has multiple detection, the labels are on ``N`` lines.
     The read_labels function read these ``N`` lines and converts them into a tensor
-    of size (N, n) where ``N`` is the number of detected objects and ``n`` is the annotation.
+    of size ``(N, n)`` where ``N`` is the number of detected objects and ``n`` is the annotation.
     These ``N`` detections are to be returned as a list of ``N`` element where each element is
     a tensor of size ``(1,n)``.
 
@@ -124,6 +124,8 @@ def label_tensor(label, S, nc, nkpt, cell_relative=True, nkpt_conf=True):
         A torch tensor of dimension ``(5 + 3*nkpt + nc, S, S)`` with keypoint visibility confidence flag
         and ``(5 + 2*nkpt + nc, S, S)`` for truth without keypoint visibility confidence flag.
 
+    Examples
+    --------
     >>> l = torch.Tensor([[1,0.5,0.5,0.5,0.5,0.5,0.6],[0,0.7,0.8,0.2,0.1, 0.2,0.3]])
     >>> t = label_tensor(l, S=3, nc=2, nkpt=1, cell_relative=True, nkpt_conf=False)
     
