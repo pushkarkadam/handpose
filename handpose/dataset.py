@@ -99,7 +99,7 @@ def split_label_tensor(tensor):
 
     return labels
 
-def label_tensor(label, S, nc, nkpt, cell_relative=True, kpt_conf=True):
+def label_tensor(label, S, nc, nkpt, cell_relative=True, require_kpt_conf=True):
     """Converts to tensor.
 
     Parameters
@@ -116,7 +116,7 @@ def label_tensor(label, S, nc, nkpt, cell_relative=True, kpt_conf=True):
         Number of keypoints
     cell_relative: bool, default ``True``
         Boolean to select relative to cell coordinates for center of bounding box.
-    kpt_conf: bool, default ``True``
+    require_kpt_conf: bool, default ``True``
         Boolean to select for the keypoint confidence visibility.
     
     Returns
@@ -143,7 +143,7 @@ def label_tensor(label, S, nc, nkpt, cell_relative=True, kpt_conf=True):
         raise
 
     # Checking if the keypoint visibility flag is needed
-    if kpt_conf:
+    if require_kpt_conf:
         # Extracting the dimension of the truth tensor
         truth_dims = (5 + 3*nkpt + nc, S, S)
     else:
@@ -182,7 +182,7 @@ def label_tensor(label, S, nc, nkpt, cell_relative=True, kpt_conf=True):
         obj_conf = torch.ones(1, 1)
 
         # keypoint visibility conf
-        if kpt_conf:
+        if require_kpt_conf:
 
             kpt_conf = torch.ones(1, nkpt)
     
@@ -246,7 +246,7 @@ def polar_kpt(x, y, w, h, kx, ky):
 
     return r, alpha
 
-def truth_head(truth, S, nc, nkpt, kpt_conf=True, require_polar_kpt=True):
+def truth_head(truth, S, nc, nkpt, require_kpt_conf=True, require_polar_kpt=True):
     """Returns the head for the network prediction
     with the values organised in a dictionary.
 
@@ -265,7 +265,7 @@ def truth_head(truth, S, nc, nkpt, kpt_conf=True, require_polar_kpt=True):
         Number of classes
     nkpt: int
         Number of keypoints
-    kpt_conf: bool, default ``True``
+    require_kpt_conf: bool, default ``True``
         Whether to include keypoints.
 
     Returns
@@ -302,13 +302,13 @@ def truth_head(truth, S, nc, nkpt, kpt_conf=True, require_polar_kpt=True):
         [[0.0000, 0.0000, 0.0000],
          [0.0000, 1.0000, 0.0000],
          [0.0000, 0.0000, 0.0000]]])
-    >>> truth_head(t, S=3, nc=2, nkpt=1, kpt_conf=True)
+    >>> truth_head(t, S=3, nc=2, nkpt=1, require_kpt_conf=True)
         
     """
     # Sanity check
     ch, _, _ = truth.shape
     try:
-        if kpt_conf:
+        if require_kpt_conf:
             assert(ch == (5 + nkpt + 2* nkpt + nc))
         else:
             assert(ch == (5 + 2 * nkpt + nc))
@@ -325,7 +325,7 @@ def truth_head(truth, S, nc, nkpt, kpt_conf=True, require_polar_kpt=True):
     classes = truth[-nc:,...]
 
     start = 5
-    if kpt_conf:
+    if require_kpt_conf:
         end = 5 + nkpt
         k_conf = truth[start:end,...]
         kpts = truth[end:end+(2*nkpt),...]
@@ -339,7 +339,8 @@ def truth_head(truth, S, nc, nkpt, kpt_conf=True, require_polar_kpt=True):
     
     i = 0
     j = 0
-    while i < nkpt:
+    # Iterating over the number of keypoints (2 * nkpt)
+    while i < (nkpt * 2):
         kx, ky = kpts[i:i+2,...]
         kpt_dict[f"kx_{j}"] = kx
         kpt_dict[f"ky_{j}"] = ky
@@ -347,14 +348,14 @@ def truth_head(truth, S, nc, nkpt, kpt_conf=True, require_polar_kpt=True):
         if require_polar_kpt:
             r, alpha = polar_kpt(x, y, w, h, kx, ky)
             kpt_polar_dict[f"r_{j}"] = r
-            kpt_polar_dict[f"alpha_{i}"] = alpha
+            kpt_polar_dict[f"alpha_{j}"] = alpha
         
         i += 2
         j += 1
 
     k_conf_dict = dict()
     
-    if kpt_conf:
+    if require_kpt_conf:
         k = 0
         while k < nkpt:
             k_conf_dict[f"k_conf_{k}"] = k_conf[k:k+1,...]

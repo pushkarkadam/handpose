@@ -53,14 +53,18 @@ def test_split_label_tensor():
 def test_label_tensor():
     label = torch.Tensor([[1,0.5,0.5,0.5,0.5,0.5,0.6],[0,0.7,0.8,0.2,0.1, 0.2,0.3]])
 
-    t1 = handpose.dataset.label_tensor(label, S=3, nc=2, nkpt=1, cell_relative=True, kpt_conf=False)
-    t2 = handpose.dataset.label_tensor(label, S=3, nc=2, nkpt=1, cell_relative=True, kpt_conf=True)
+    t1 = handpose.dataset.label_tensor(label, S=3, nc=2, nkpt=1, cell_relative=True, require_kpt_conf=False)
+    t2 = handpose.dataset.label_tensor(label, S=3, nc=2, nkpt=1, cell_relative=True, require_kpt_conf=True)
     ch = torch.Tensor([[0,0,0],[0,1,0],[0,0,1]])
 
     assert(t1.shape == (9, 3, 3))
     assert(t2.shape == (10, 3, 3))
     torch.testing.assert_close(t1[0], ch)
     torch.testing.assert_close(t2[0], ch)
+
+    label2 = torch.Tensor([[1,0.5,0.5,0.5,0.5,0.5,0.6, 0.5, 0.1],[0,0.7,0.8,0.2,0.1, 0.2,0.3, 0.5, 0.1]])
+    t3 = handpose.dataset.label_tensor(label2, S=3, nc=2, nkpt=2, cell_relative=True, require_kpt_conf=True)
+    assert(t3.shape == (13, 3, 3))
 
 def test_polar_kpt():
     r1, alpha1 = handpose.dataset.polar_kpt(torch.Tensor([[0.6]]), torch.Tensor([[0.6]]), torch.Tensor([[0.4]]), torch.Tensor([[0.4]]), torch.Tensor([[0.2]]), torch.Tensor([[0.2]]))
@@ -74,14 +78,14 @@ def test_polar_kpt():
 def test_truth_head():
     label = torch.Tensor([[1,0.5,0.5,0.5,0.5,0.5,0.6],[0,0.7,0.8,0.2,0.1, 0.2,0.3]])
 
-    t1 = handpose.dataset.label_tensor(label, S=3, nc=2, nkpt=1, cell_relative=True, kpt_conf=False)
-    t2 = handpose.dataset.label_tensor(label, S=3, nc=2, nkpt=1, cell_relative=True, kpt_conf=True)
+    t1 = handpose.dataset.label_tensor(label, S=3, nc=2, nkpt=1, cell_relative=True, require_kpt_conf=False)
+    t2 = handpose.dataset.label_tensor(label, S=3, nc=2, nkpt=1, cell_relative=True, require_kpt_conf=True)
 
-    head1 = handpose.dataset.truth_head(t1, S=3, nc=2, nkpt=1, kpt_conf=False)
-    head2 = handpose.dataset.truth_head(t2, S=3, nc=2, nkpt=1, kpt_conf=True)
+    head1 = handpose.dataset.truth_head(t1, S=3, nc=2, nkpt=1, require_kpt_conf=False)
+    head2 = handpose.dataset.truth_head(t2, S=3, nc=2, nkpt=1, require_kpt_conf=True)
 
     with pytest.raises(Exception) as e:
-        head3 = handpose.dataset.truth_head(t1, S=3, nc=2, nkpt=1, kpt_conf=True)
+        head3 = handpose.dataset.truth_head(t1, S=3, nc=2, nkpt=1, require_kpt_conf=True)
 
     assert(type(head1) == dict)
     assert(type(head2) == dict)
@@ -97,3 +101,18 @@ def test_truth_head():
     assert(list(head2['kpt_polar'].keys()) == ['r_0', 'alpha_0'])
     assert(head2['kpt_polar']['r_0'].shape == (1, 3, 3))
     assert(head2['kpt_polar']['alpha_0'].shape == (1, 3, 3))
+
+    label2 = torch.Tensor([[1,0.5,0.5,0.5,0.5,0.5,0.6, 0.5, 0.1],[0,0.7,0.8,0.2,0.1, 0.2,0.3, 0.5, 0.1]])
+    t3 = handpose.dataset.label_tensor(label2, S=3, nc=2, nkpt=2, cell_relative=True, require_kpt_conf=True)
+
+    head4 = handpose.dataset.truth_head(t3, S=3, nc=2, nkpt=2, require_kpt_conf=True)
+
+    assert(list(head4['kpt'].keys()) == ["kx_0", "ky_0", "kx_1", "ky_1"])
+    assert(list(head4['k_conf'].keys()) == ["k_conf_0", "k_conf_1"])
+
+    label3 = torch.Tensor([[1,0.5,0.5,0.5,0.5,0.5,0.6, 0.5, 0.1, 0.5, 0.2],[0,0.7,0.8,0.2,0.1, 0.2,0.3, 0.5, 0.1, 0.5, 0.2]])
+    t4 = handpose.dataset.label_tensor(label3, S=3, nc=2, nkpt=3, cell_relative=True, require_kpt_conf=True)
+    head5 = handpose.dataset.truth_head(t4, S=3, nc=2, nkpt=3, require_kpt_conf=True)
+
+    assert(list(head5['kpt'].keys()) == ["kx_0", "ky_0", "kx_1", "ky_1", "kx_2", "ky_2"])
+    assert(list(head5['k_conf'].keys()) == ["k_conf_0", "k_conf_1", "k_conf_2"])
