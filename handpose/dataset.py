@@ -1,5 +1,6 @@
 import os
 import torch
+import numpy as np
 
 def read_label(file_path):
     """Reads the labels from text file.
@@ -201,7 +202,51 @@ def label_tensor(label, S, nc, nkpt, cell_relative=True, kpt_conf=True):
     
     return truth_tensor
 
-def truth_head(truth, S, nc, nkpt, kpt_conf=True):
+def polar_kpt(x, y, w, h, kx, ky):
+    """Returns relative position of keypoints.
+
+    Parameters
+    ----------
+    x: torch.Tensor
+        x coordinate of bounding box.
+    y: torch.Tensor
+        y coordinate of bounding box.
+    w: torch.Tensor
+        Width of the bounding box.
+    h: torch.Tensor
+        Height of bounding box.
+    kx: torch.Tensor
+        x coordinate of keypoint.
+    ky: torch.Tensor
+        y coordinate of keypoint.
+
+    Returns
+    -------
+    tuple
+        A tuple of ``(r, alpha)`` which are polar coordiantes relative to center of bounding box ``(x, y)``.
+
+    Examples
+    --------
+    >>> polar_kpt(torch.Tensor([0.6]), torch.Tensor([0.6]), torch.Tensor([0.4]), torch.Tensor([0.4]), torch.Tensor([0.2]), torch.Tensor([0.2]))
+    (tensor([0.5657]), tensor([0.6250]))
+    
+    """
+    
+    kx_r = kx - x
+    ky_r = ky - y
+
+    # polar 
+    r = torch.sqrt(kx_r**2 + ky_r**2)
+    theta = torch.atan2(ky_r, kx_r)
+
+    alpha = torch.where(theta < 0, theta + 2 *np.pi, theta)
+    
+    # normalising
+    alpha = alpha / (2 * np.pi)
+
+    return r, alpha
+
+def truth_head(truth, S, nc, nkpt, kpt_conf=True, require_polar_kpt=True):
     """Returns the head for the network prediction
     with the values organised in a dictionary.
 
@@ -226,7 +271,7 @@ def truth_head(truth, S, nc, nkpt, kpt_conf=True):
     Returns
     -------
     dict
-        A dictionary with keys ``['conf', 'x', 'y', 'w', 'h', 'k_conf', 'kpt', 'classes']``
+        A dictionary with keys ``['conf', 'x', 'y', 'w', 'h', 'k_conf', 'kpt', 'kpt_polar', 'classes']``
 
     Examples
     --------
@@ -267,38 +312,7 @@ def truth_head(truth, S, nc, nkpt, kpt_conf=True):
          [0.0000, 0.0000, 0.0000]]])
 
     >>> truth_head(t, S=3, nc=2, nkpt=1, kpt_conf=True)
-    {'conf': tensor([[[0., 0., 0.],
-            [0., 1., 0.],
-            [0., 0., 1.]]]),
-    'x': tensor([[[0.0000, 0.0000, 0.0000],
-            [0.0000, 0.5000, 0.0000],
-            [0.0000, 0.0000, 0.1000]]]),
-    'y': tensor([[[0.0000, 0.0000, 0.0000],
-            [0.0000, 0.5000, 0.0000],
-            [0.0000, 0.0000, 0.4000]]]),
-    'w': tensor([[[0.0000, 0.0000, 0.0000],
-            [0.0000, 0.5000, 0.0000],
-            [0.0000, 0.0000, 0.2000]]]),
-    'h': tensor([[[0.0000, 0.0000, 0.0000],
-            [0.0000, 0.5000, 0.0000],
-            [0.0000, 0.0000, 0.1000]]]),
-    'k_conf': {'k_conf_0': tensor([[[0., 0., 0.],
-            [0., 1., 0.],
-            [0., 0., 1.]]])},
-    'kpt': {'kx_0': tensor([[0.0000, 0.0000, 0.0000],
-            [0.0000, 0.5000, 0.0000],
-            [0.0000, 0.0000, 0.2000]]),
-    'ky_0': tensor([[0.0000, 0.0000, 0.0000],
-            [0.0000, 0.6000, 0.0000],
-            [0.0000, 0.0000, 0.3000]])},
-    'classes': tensor([[[0., 0., 0.],
-            [0., 0., 0.],
-            [0., 0., 1.]],
-    
-            [[0., 0., 0.],
-            [0., 1., 0.],
-            [0., 0., 0.]]])}
-    
+        
     """
     # Sanity check
     ch, _, _ = truth.shape
@@ -330,6 +344,7 @@ def truth_head(truth, S, nc, nkpt, kpt_conf=True):
 
     # Extracting keypoints
     kpt_dict = dict()
+    kpt_polar_dict = dict()
     
     i = 0
     j = 0
@@ -337,6 +352,12 @@ def truth_head(truth, S, nc, nkpt, kpt_conf=True):
         kx, ky = kpts[i:i+2,...]
         kpt_dict[f"kx_{j}"] = kx
         kpt_dict[f"ky_{j}"] = ky
+
+        if require_polar_kpt:
+            r, alpha = polar_kpt(x, y, w, h, kx, ky)
+            kpt_polar_dict[f"r_{j}"] = r
+            kpt_polar_dict[f"alpha_{i}"] = alpha
+        
         i += 2
         j += 1
 
@@ -355,6 +376,7 @@ def truth_head(truth, S, nc, nkpt, kpt_conf=True):
             "h": h,
             "k_conf": k_conf_dict,
             "kpt": kpt_dict,
+            "kpt_polar": kpt_polar_dict,
             "classes": classes
            }
 

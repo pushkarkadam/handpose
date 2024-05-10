@@ -1,6 +1,7 @@
 import sys
 import pytest 
 import torch
+import numpy as np
 sys.path.append('../')
 
 import handpose
@@ -61,6 +62,15 @@ def test_label_tensor():
     torch.testing.assert_close(t1[0], ch)
     torch.testing.assert_close(t2[0], ch)
 
+def test_polar_kpt():
+    r1, alpha1 = handpose.dataset.polar_kpt(torch.Tensor([[0.6]]), torch.Tensor([[0.6]]), torch.Tensor([[0.4]]), torch.Tensor([[0.4]]), torch.Tensor([[0.2]]), torch.Tensor([[0.2]]))
+    r2, alpha2 = handpose.dataset.polar_kpt(torch.Tensor([0.6]), torch.Tensor([0.6]), torch.Tensor([0.4]), torch.Tensor([0.4]), torch.Tensor([0.6]), torch.Tensor([0.2]))
+    
+    torch.testing.assert_close(torch.round(r1, decimals=4), torch.Tensor([[0.5657]]))
+    torch.testing.assert_close(torch.round(alpha1, decimals=4), torch.Tensor([[0.625]]))
+    torch.testing.assert_close(torch.round(r2, decimals=2), torch.Tensor([0.40]))
+    torch.testing.assert_close(torch.round(alpha2, decimals=2), torch.Tensor([0.75]))
+
 def test_truth_head():
     label = torch.Tensor([[1,0.5,0.5,0.5,0.5,0.5,0.6],[0,0.7,0.8,0.2,0.1, 0.2,0.3]])
 
@@ -70,14 +80,20 @@ def test_truth_head():
     head1 = handpose.dataset.truth_head(t1, S=3, nc=2, nkpt=1, kpt_conf=False)
     head2 = handpose.dataset.truth_head(t2, S=3, nc=2, nkpt=1, kpt_conf=True)
 
+    with pytest.raises(Exception) as e:
+        head3 = handpose.dataset.truth_head(t1, S=3, nc=2, nkpt=1, kpt_conf=True)
+
     assert(type(head1) == dict)
     assert(type(head2) == dict)
-    assert(list(head1.keys()) == ['conf', 'x', 'y', 'w', 'h', 'k_conf', 'kpt', 'classes'])
-    assert(list(head2.keys()) == ['conf', 'x', 'y', 'w', 'h', 'k_conf', 'kpt', 'classes'])
+    assert(list(head1.keys()) == ['conf', 'x', 'y', 'w', 'h', 'k_conf', 'kpt', 'kpt_polar', 'classes'])
+    assert(list(head2.keys()) == ['conf', 'x', 'y', 'w', 'h', 'k_conf', 'kpt', 'kpt_polar', 'classes'])
     assert(head1['k_conf'] == dict())
     assert(list(head2['k_conf'].keys()) == ['k_conf_0'])
     assert(head2['k_conf']['k_conf_0'].shape == (1, 3, 3))
     assert(head1['x'].shape == (1, 3, 3))
     assert(head2['conf'].shape == (1, 3, 3))
     assert(head2['classes'].shape == (2, 3, 3))
-    
+    assert(type(head2['kpt_polar']) == dict)
+    assert(list(head2['kpt_polar'].keys()) == ['r_0', 'alpha_0'])
+    assert(head2['kpt_polar']['r_0'].shape == (1, 3, 3))
+    assert(head2['kpt_polar']['alpha_0'].shape == (1, 3, 3))
