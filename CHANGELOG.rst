@@ -15,5 +15,10 @@ and this project adheres to `Semantic Versioning`_.
 Added
 ^^^^^
 - Function to load variables from a yaml file.
-- Read labels from text file function ``read_labels()`` added to ``dataset.py``.
-- Read files from directory function ``list_files()`` added to ``dataset.py``.
+- Read labels from text file function.
+- Read files from directory function.
+- Split label tensor function.
+- Label to tensor conversion for ground truth.
+- Cartesian to polar relative to center coordinates.
+- Truth head function.
+- ``HandDataset`` class for loading the data.
