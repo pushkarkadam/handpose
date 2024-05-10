@@ -116,3 +116,11 @@ def test_truth_head():
 
     assert(list(head5['kpt'].keys()) == ["kx_0", "ky_0", "kx_1", "ky_1", "kx_2", "ky_2"])
     assert(list(head5['k_conf'].keys()) == ["k_conf_0", "k_conf_1", "k_conf_2"])
+
+
+    t5 = handpose.dataset.label_tensor(label3, S=3, nc=2, nkpt=3, cell_relative=True, require_kpt_conf=False)
+    head6 = handpose.dataset.truth_head(t5, S=3, nc=2, nkpt=3, require_kpt_conf=False)
+
+    assert(list(head6['kpt'].keys()) == ["kx_0", "ky_0", "kx_1", "ky_1", "kx_2", "ky_2"])
+    assert(head6['k_conf'] == dict())
+    assert(list(head6['k_conf'].keys()) == [])
