@@ -52,11 +52,32 @@ def test_split_label_tensor():
 def test_label_tensor():
     label = torch.Tensor([[1,0.5,0.5,0.5,0.5,0.5,0.6],[0,0.7,0.8,0.2,0.1, 0.2,0.3]])
 
-    t1 = handpose.dataset.label_tensor(label, S=3, nc=2, nkpt=1, cell_relative=True, nkpt_conf=False)
-    t2 = handpose.dataset.label_tensor(label, S=3, nc=2, nkpt=1, cell_relative=True, nkpt_conf=True)
+    t1 = handpose.dataset.label_tensor(label, S=3, nc=2, nkpt=1, cell_relative=True, kpt_conf=False)
+    t2 = handpose.dataset.label_tensor(label, S=3, nc=2, nkpt=1, cell_relative=True, kpt_conf=True)
     ch = torch.Tensor([[0,0,0],[0,1,0],[0,0,1]])
 
     assert(t1.shape == (9, 3, 3))
     assert(t2.shape == (10, 3, 3))
     torch.testing.assert_close(t1[0], ch)
     torch.testing.assert_close(t2[0], ch)
+
+def test_truth_head():
+    label = torch.Tensor([[1,0.5,0.5,0.5,0.5,0.5,0.6],[0,0.7,0.8,0.2,0.1, 0.2,0.3]])
+
+    t1 = handpose.dataset.label_tensor(label, S=3, nc=2, nkpt=1, cell_relative=True, kpt_conf=False)
+    t2 = handpose.dataset.label_tensor(label, S=3, nc=2, nkpt=1, cell_relative=True, kpt_conf=True)
+
+    head1 = handpose.dataset.truth_head(t1, S=3, nc=2, nkpt=1, kpt_conf=False)
+    head2 = handpose.dataset.truth_head(t2, S=3, nc=2, nkpt=1, kpt_conf=True)
+
+    assert(type(head1) == dict)
+    assert(type(head2) == dict)
+    assert(list(head1.keys()) == ['conf', 'x', 'y', 'w', 'h', 'k_conf', 'kpt', 'classes'])
+    assert(list(head2.keys()) == ['conf', 'x', 'y', 'w', 'h', 'k_conf', 'kpt', 'classes'])
+    assert(head1['k_conf'] == dict())
+    assert(list(head2['k_conf'].keys()) == ['k_conf_0'])
+    assert(head2['k_conf']['k_conf_0'].shape == (1, 3, 3))
+    assert(head1['x'].shape == (1, 3, 3))
+    assert(head2['conf'].shape == (1, 3, 3))
+    assert(head2['classes'].shape == (2, 3, 3))
+    

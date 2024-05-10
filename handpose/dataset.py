@@ -98,7 +98,7 @@ def split_label_tensor(tensor):
 
     return labels
 
-def label_tensor(label, S, nc, nkpt, cell_relative=True, nkpt_conf=True):
+def label_tensor(label, S, nc, nkpt, cell_relative=True, kpt_conf=True):
     """Converts to tensor.
 
     Parameters
@@ -115,7 +115,7 @@ def label_tensor(label, S, nc, nkpt, cell_relative=True, nkpt_conf=True):
         Number of keypoints
     cell_relative: bool, default ``True``
         Boolean to select relative to cell coordinates for center of bounding box.
-    nkpt_conf: bool, default ``True``
+    kpt_conf: bool, default ``True``
         Boolean to select for the keypoint confidence visibility.
     
     Returns
@@ -127,7 +127,7 @@ def label_tensor(label, S, nc, nkpt, cell_relative=True, nkpt_conf=True):
     Examples
     --------
     >>> l = torch.Tensor([[1,0.5,0.5,0.5,0.5,0.5,0.6],[0,0.7,0.8,0.2,0.1, 0.2,0.3]])
-    >>> t = label_tensor(l, S=3, nc=2, nkpt=1, cell_relative=True, nkpt_conf=False)
+    >>> t = label_tensor(l, S=3, nc=2, nkpt=1, cell_relative=True, kpt_conf=False)
     
     """
     # 4 --> (x, y, w, h)
@@ -142,7 +142,7 @@ def label_tensor(label, S, nc, nkpt, cell_relative=True, nkpt_conf=True):
         raise
 
     # Checking if the keypoint visibility flag is needed
-    if nkpt_conf:
+    if kpt_conf:
         # Extracting the dimension of the truth tensor
         truth_dims = (5 + 3*nkpt + nc, S, S)
     else:
@@ -181,7 +181,7 @@ def label_tensor(label, S, nc, nkpt, cell_relative=True, nkpt_conf=True):
         obj_conf = torch.ones(1, 1)
 
         # keypoint visibility conf
-        if nkpt_conf:
+        if kpt_conf:
 
             kpt_conf = torch.ones(1, nkpt)
     
@@ -200,3 +200,162 @@ def label_tensor(label, S, nc, nkpt, cell_relative=True, nkpt_conf=True):
         truth_tensor[:, i, j] = truth_label
     
     return truth_tensor
+
+def truth_head(truth, S, nc, nkpt, kpt_conf=True):
+    """Returns the head for the network prediction
+    with the values organised in a dictionary.
+
+    Parameters
+    ----------
+    truth: torch.Tensor
+        A ground truth tensor of size ``(N, S, S)`` where ``N`` is the channel.
+        ``N`` depends upon whether the keypoint confidence is considered.
+
+        .. math::
+            N = 5 + nkpt + 2 \times nkpt + nc
+            N = 5 + 2 \times nkpt + nc
+    S: int
+        The grid size.
+    nc: int
+        Number of classes
+    nkpt: int
+        Number of keypoints
+    kpt_conf: bool, default ``True``
+        Whether to include keypoints.
+
+    Returns
+    -------
+    dict
+        A dictionary with keys ``['conf', 'x', 'y', 'w', 'h', 'k_conf', 'kpt', 'classes']``
+
+    Examples
+    --------
+    >>> truth = torch.Tensor([[[0.0000, 0.0000, 0.0000],
+         [0.0000, 1.0000, 0.0000],
+         [0.0000, 0.0000, 1.0000]],
+
+        [[0.0000, 0.0000, 0.0000],
+         [0.0000, 0.5000, 0.0000],
+         [0.0000, 0.0000, 0.1000]],
+
+        [[0.0000, 0.0000, 0.0000],
+         [0.0000, 0.5000, 0.0000],
+         [0.0000, 0.0000, 0.4000]],
+
+        [[0.0000, 0.0000, 0.0000],
+         [0.0000, 0.5000, 0.0000],
+         [0.0000, 0.0000, 0.2000]],
+
+        [[0.0000, 0.0000, 0.0000],
+         [0.0000, 0.5000, 0.0000],
+         [0.0000, 0.0000, 0.1000]],
+
+        [[0.0000, 0.0000, 0.0000],
+         [0.0000, 0.5000, 0.0000],
+         [0.0000, 0.0000, 0.2000]],
+
+        [[0.0000, 0.0000, 0.0000],
+         [0.0000, 0.6000, 0.0000],
+         [0.0000, 0.0000, 0.3000]],
+
+        [[0.0000, 0.0000, 0.0000],
+         [0.0000, 0.0000, 0.0000],
+         [0.0000, 0.0000, 1.0000]],
+
+        [[0.0000, 0.0000, 0.0000],
+         [0.0000, 1.0000, 0.0000],
+         [0.0000, 0.0000, 0.0000]]])
+
+    >>> truth_head(t, S=3, nc=2, nkpt=1, kpt_conf=True)
+    {'conf': tensor([[[0., 0., 0.],
+            [0., 1., 0.],
+            [0., 0., 1.]]]),
+    'x': tensor([[[0.0000, 0.0000, 0.0000],
+            [0.0000, 0.5000, 0.0000],
+            [0.0000, 0.0000, 0.1000]]]),
+    'y': tensor([[[0.0000, 0.0000, 0.0000],
+            [0.0000, 0.5000, 0.0000],
+            [0.0000, 0.0000, 0.4000]]]),
+    'w': tensor([[[0.0000, 0.0000, 0.0000],
+            [0.0000, 0.5000, 0.0000],
+            [0.0000, 0.0000, 0.2000]]]),
+    'h': tensor([[[0.0000, 0.0000, 0.0000],
+            [0.0000, 0.5000, 0.0000],
+            [0.0000, 0.0000, 0.1000]]]),
+    'k_conf': {'k_conf_0': tensor([[[0., 0., 0.],
+            [0., 1., 0.],
+            [0., 0., 1.]]])},
+    'kpt': {'kx_0': tensor([[0.0000, 0.0000, 0.0000],
+            [0.0000, 0.5000, 0.0000],
+            [0.0000, 0.0000, 0.2000]]),
+    'ky_0': tensor([[0.0000, 0.0000, 0.0000],
+            [0.0000, 0.6000, 0.0000],
+            [0.0000, 0.0000, 0.3000]])},
+    'classes': tensor([[[0., 0., 0.],
+            [0., 0., 0.],
+            [0., 0., 1.]],
+    
+            [[0., 0., 0.],
+            [0., 1., 0.],
+            [0., 0., 0.]]])}
+    
+    """
+    # Sanity check
+    ch, _, _ = truth.shape
+    try:
+        if kpt_conf:
+            assert(ch == (5 + nkpt + 2* nkpt + nc))
+        else:
+            assert(ch == (5 + 2 * nkpt + nc))
+    except Exception as e:
+        print(e)
+        print('\033[91m' + "Dimension of truth tensor does not match with requirement.\nMake sure to check if keypoint confidence is required.\n")
+        raise
+        
+    conf = truth[0:1, ...]
+    x = truth[1:2, ...]
+    y = truth[2:3, ...]
+    w = truth[3:4, ...]
+    h = truth[4:5, ...]
+    classes = truth[-nc:,...]
+
+    start = 5
+    if kpt_conf:
+        end = 5 + nkpt
+        k_conf = truth[start:end,...]
+        kpts = truth[end:end+(2*nkpt),...]
+    else:
+        end = 5 + 2*nkpt
+        kpts = truth[start:end, ...]
+
+    # Extracting keypoints
+    kpt_dict = dict()
+    
+    i = 0
+    j = 0
+    while i < nkpt:
+        kx, ky = kpts[i:i+2,...]
+        kpt_dict[f"kx_{j}"] = kx
+        kpt_dict[f"ky_{j}"] = ky
+        i += 2
+        j += 1
+
+    k_conf_dict = dict()
+    
+    if kpt_conf:
+        k = 0
+        while k < nkpt:
+            k_conf_dict[f"k_conf_{k}"] = k_conf[k:k+1,...]
+            k += 1
+
+    head = {"conf": conf,
+            "x": x,
+            "y": y,
+            "w": w,
+            "h": h,
+            "k_conf": k_conf_dict,
+            "kpt": kpt_dict,
+            "classes": classes
+           }
+
+    return head
