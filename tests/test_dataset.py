@@ -95,6 +95,9 @@ def test_truth_head():
     assert(list(head2['k_conf'].keys()) == ['k_conf_0'])
     assert(head2['k_conf']['k_conf_0'].shape == (1, 3, 3))
     assert(head1['x'].shape == (1, 3, 3))
+    assert(head1['y'].shape == (1, 3, 3))
+    assert(head1['w'].shape == (1, 3, 3))
+    assert(head1['h'].shape == (1, 3, 3))
     assert(head2['conf'].shape == (1, 3, 3))
     assert(head2['classes'].shape == (2, 3, 3))
     assert(type(head2['kpt_polar']) == dict)
@@ -116,6 +119,9 @@ def test_truth_head():
 
     assert(list(head5['kpt'].keys()) == ["kx_0", "ky_0", "kx_1", "ky_1", "kx_2", "ky_2"])
     assert(list(head5['k_conf'].keys()) == ["k_conf_0", "k_conf_1", "k_conf_2"])
+
+    assert(head5['kpt']['kx_0'].shape == (1, 3, 3))
+    assert(head5['kpt_polar']['r_0'].shape == (1, 3, 3))
 
 
     t5 = handpose.dataset.label_tensor(label3, S=3, nc=2, nkpt=3, cell_relative=True, require_kpt_conf=False)

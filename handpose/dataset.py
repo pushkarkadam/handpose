@@ -342,6 +342,8 @@ def truth_head(truth, S, nc, nkpt, require_kpt_conf=True, require_polar_kpt=True
     # Iterating over the number of keypoints (2 * nkpt)
     while i < (nkpt * 2):
         kx, ky = kpts[i:i+2,...]
+        kx = kx.unsqueeze(0)
+        ky = ky.unsqueeze(0)
         kpt_dict[f"kx_{j}"] = kx
         kpt_dict[f"ky_{j}"] = ky
 
