@@ -1,6 +1,9 @@
 import os
 import torch
 import numpy as np
+from torch.utils.data import Dataset 
+from torchvision.io import read_image
+
 
 def read_label(file_path):
     """Reads the labels from text file.
@@ -375,3 +378,82 @@ def truth_head(truth, S, nc, nkpt, require_kpt_conf=True, require_polar_kpt=True
            }
 
     return head
+
+class HandDataset(Dataset):
+    """Custom dataset class for Freihand dataset in YOLO format.
+    
+    Attributes
+    ----------
+    img_dir: str
+        Path to image directory.
+    label_dir: str
+        Path to label directory.
+    S: int
+        Grid size.
+    nc: int
+        Number of classes.
+    nkpt: int
+        Number of keypoints.
+    cell_relative: bool
+        Makes the bounding box coordinates relative to cell.
+    require_kpt_conf: bool
+        Adds the confidence for each keypoint.
+
+    """
+    def __init__(self, img_dir, label_dir, S, nc, nkpt, cell_relative, require_kpt_conf):
+        """
+        Constructs all the necesarry attribute for the dataset.
+
+        Parameters
+        ----------
+        img_dir: str
+            Path to image directory.
+        label_dir: str
+            Path to label directory.
+        S: int
+            Grid size.
+        nc: int
+            Number of classes.
+        nkpt: int
+            Number of keypoints.
+        cell_relative: bool
+            Makes the bounding box coordinates relative to cell.
+        require_kpt_conf: bool
+            Adds the confidence for each keypoint.
+
+        """
+        self.img_dir = img_dir
+        self.label_dir = label_dir
+        self.S = S
+        self.nc = nc
+        self.nkpt = nkpt
+        self.cell_relative = cell_relative
+        self.require_kpt_conf = require_kpt_conf
+
+        self.img_list = list_files(img_dir)
+        self.label_list = list_files(label_dir)
+
+        # Checking if the labels are present
+        self.images_set = set([f[:-4] for f in self.img_list])
+        self.labels_set = set([f[:-4] for f in self.label_list])
+
+        assert(self.images_set == self.labels_set)
+
+    def __len__(self):
+        return len(self.label_list)
+
+    def __getitem__(self, idx):
+        current_label = list(self.labels_set)[idx]
+        img_path = os.path.join(self.img_dir, current_label + '.jpg')
+        label_path = os.path.join(self.label_dir, current_label + '.txt')
+        
+        image = read_image(img_path)
+        label = read_label(label_path)
+        truth_tensor = label_tensor(label, S=self.S, nc=self.nc, nkpt=self.nkpt, cell_relative=self.cell_relative, require_kpt_conf=self.require_kpt_conf)
+        head = truth_head(truth_tensor, S=self.S, nc=self.nc, nkpt=self.nkpt, require_kpt_conf=self.require_kpt_conf)
+
+        data = {"head": head,
+                "image_name": current_label
+               }
+
+        return image, data

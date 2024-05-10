@@ -1,10 +1,13 @@
 import sys
+import os
 import pytest 
 import torch
 import numpy as np
+from torch.utils.data import DataLoader
 sys.path.append('../')
 
 import handpose
+
 
 def test_read_label():
     text_file_path = 'tests/test_labels/test_label1.txt'
@@ -130,3 +133,55 @@ def test_truth_head():
     assert(list(head6['kpt'].keys()) == ["kx_0", "ky_0", "kx_1", "ky_1", "kx_2", "ky_2"])
     assert(head6['k_conf'] == dict())
     assert(list(head6['k_conf'].keys()) == [])
+
+def test_dataset():
+    sys.path.append('..')
+    img_dir = 'data/dev/train/images'
+    label_dir = 'data/dev/train/labels'
+    training_data = handpose.dataset.HandDataset(img_dir, label_dir, S=7, nc=2, nkpt=21, cell_relative=True, require_kpt_conf=True)
+    
+    # test 1
+    torch.manual_seed(0)
+    train_dataloader = DataLoader(training_data, batch_size=1, shuffle=False, drop_last=True)
+
+    train_features, data = next(iter(train_dataloader))
+
+    head = data['head']
+
+    assert(train_features.shape == (1, 3, 224, 224))
+    assert(type(head) == dict)
+    assert(head['x'].shape == (1, 1, 7, 7))
+
+    kpts = []
+    kpts_polar = []
+    for i in range(21):
+        kpts.append(f'kx_{i}')
+        kpts.append(f'ky_{i}')
+        kpts_polar.append(f'r_{i}')
+        kpts_polar.append(f'alpha_{i}')
+
+    assert(list(head['kpt'].keys()) == kpts)
+    assert(list(head['kpt_polar'].keys()) == kpts_polar)
+
+    # test 2
+    torch.manual_seed(0)
+    train_dataloader = DataLoader(training_data, batch_size=16, shuffle=False, drop_last=True)
+
+    train_features, data = next(iter(train_dataloader))
+
+    head = data['head']
+
+    assert(train_features.shape == (16, 3, 224, 224))
+    assert(type(head) == dict)
+    assert(head['x'].shape == (16, 1, 7, 7))
+
+    kpts = []
+    kpts_polar = []
+    for i in range(21):
+        kpts.append(f'kx_{i}')
+        kpts.append(f'ky_{i}')
+        kpts_polar.append(f'r_{i}')
+        kpts_polar.append(f'alpha_{i}')
+
+    assert(list(head['kpt'].keys()) == kpts)
+    assert(list(head['kpt_polar'].keys()) == kpts_polar)
