@@ -12,3 +12,11 @@ Helpers
     :members:
     :undoc-members:
     :show-inheritance:
+
+Dataset 
+^^^^^^^
+
+.. automodule:: handpose.dataset 
+    :members:
+    :undoc-members:
+    :show-inheritance:

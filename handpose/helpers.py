@@ -12,11 +12,16 @@ def load_variables(file_path):
     -------
     dict
 
+    Examples
+    --------
+    >>> variables = handpose.helpers.load_variables('config.yaml')
+
     """
     try:
         with open(file_path, 'r') as file:
             variables = yaml.safe_load(file)
     except Exception as e:
         print(e)
+        raise
 
     return variables
