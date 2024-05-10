@@ -151,7 +151,12 @@ def test_dataset():
 
     assert(train_features.shape == (1, 3, 224, 224))
     assert(type(head) == dict)
+    assert(head['conf'].shape == (1, 1, 7, 7))
     assert(head['x'].shape == (1, 1, 7, 7))
+    assert(head['kpt']['kx_0'].shape == (1, 1, 7, 7))
+    assert(head['kpt']['ky_0'].shape == (1, 1, 7, 7))
+    assert(head['kpt_polar']['r_0'].shape == (1, 1, 7, 7))
+    assert(head['kpt_polar']['alpha_0'].shape == (1, 1, 7, 7))
 
     kpts = []
     kpts_polar = []
