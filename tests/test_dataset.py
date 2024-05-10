@@ -140,13 +140,14 @@ def test_dataset():
     label_dir = 'data/dev/train/labels'
     training_data = handpose.dataset.HandDataset(img_dir, label_dir, S=7, nc=2, nkpt=21, cell_relative=True, require_kpt_conf=True)
     
-    # test 1
+    # test 1 - Batch size = 1
     torch.manual_seed(0)
     train_dataloader = DataLoader(training_data, batch_size=1, shuffle=False, drop_last=True)
 
     train_features, data = next(iter(train_dataloader))
 
     head = data['head']
+    image_name = data['image_name']
 
     assert(train_features.shape == (1, 3, 224, 224))
     assert(type(head) == dict)
@@ -162,14 +163,17 @@ def test_dataset():
 
     assert(list(head['kpt'].keys()) == kpts)
     assert(list(head['kpt_polar'].keys()) == kpts_polar)
+    assert(type(image_name) == list)
+    assert(len(image_name) == 1)
 
-    # test 2
+    # test 2 - Batch size = 16
     torch.manual_seed(0)
     train_dataloader = DataLoader(training_data, batch_size=16, shuffle=False, drop_last=True)
 
     train_features, data = next(iter(train_dataloader))
 
     head = data['head']
+    image_name = data['image_name']
 
     assert(train_features.shape == (16, 3, 224, 224))
     assert(type(head) == dict)
@@ -185,3 +189,5 @@ def test_dataset():
 
     assert(list(head['kpt'].keys()) == kpts)
     assert(list(head['kpt_polar'].keys()) == kpts_polar)
+    assert(type(image_name) == list)
+    assert(len(image_name) == 16)
