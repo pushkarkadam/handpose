@@ -90,12 +90,19 @@ def test_truth_head():
     with pytest.raises(Exception) as e:
         head3 = handpose.dataset.truth_head(t1, S=3, nc=2, nkpt=1, require_kpt_conf=True)
 
+    # Testing type
     assert(type(head1) == dict)
     assert(type(head2) == dict)
-    assert(list(head1.keys()) == ['conf', 'x', 'y', 'w', 'h', 'k_conf', 'kpt', 'kpt_polar', 'classes'])
-    assert(list(head2.keys()) == ['conf', 'x', 'y', 'w', 'h', 'k_conf', 'kpt', 'kpt_polar', 'classes'])
+    assert(type(head2['kpt_polar']) == dict)
+    
+    # Testing keys of head
+    assert(list(head1.keys()) == ['conf', 'x', 'y', 'w', 'h', 'k_conf', 'kpt', 'kpt_polar', 'classes', 'obj_indices'])
+    assert(list(head2.keys()) == ['conf', 'x', 'y', 'w', 'h', 'k_conf', 'kpt', 'kpt_polar', 'classes', 'obj_indices'])
     assert(head1['k_conf'] == dict())
     assert(list(head2['k_conf'].keys()) == ['k_conf_0'])
+    assert(list(head2['kpt_polar'].keys()) == ['r_0', 'alpha_0'])
+    
+    # Testing dimension
     assert(head2['k_conf']['k_conf_0'].shape == (1, 3, 3))
     assert(head1['x'].shape == (1, 3, 3))
     assert(head1['y'].shape == (1, 3, 3))
@@ -103,10 +110,11 @@ def test_truth_head():
     assert(head1['h'].shape == (1, 3, 3))
     assert(head2['conf'].shape == (1, 3, 3))
     assert(head2['classes'].shape == (2, 3, 3))
-    assert(type(head2['kpt_polar']) == dict)
-    assert(list(head2['kpt_polar'].keys()) == ['r_0', 'alpha_0'])
     assert(head2['kpt_polar']['r_0'].shape == (1, 3, 3))
     assert(head2['kpt_polar']['alpha_0'].shape == (1, 3, 3))
+
+    # Testing objectness
+    assert(head1['obj_indices'] == [[1,1], [2,2]])
 
     label2 = torch.Tensor([[1,0.5,0.5,0.5,0.5,0.5,0.6, 0.5, 0.1],[0,0.7,0.8,0.2,0.1, 0.2,0.3, 0.5, 0.1]])
     t3 = handpose.dataset.label_tensor(label2, S=3, nc=2, nkpt=2, cell_relative=True, require_kpt_conf=True)
