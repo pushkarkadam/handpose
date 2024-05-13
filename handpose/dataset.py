@@ -372,7 +372,7 @@ def truth_head(truth, S, nc, nkpt, require_kpt_conf=True, require_polar_kpt=True
             k += 1
 
     # Object index
-    obj_indices = torch.nonzero(conf.squeeze(0)).tolist()
+    obj_indices = torch.nonzero(conf.squeeze(0))
 
     head = {"conf": conf,
             "x": x,
