@@ -270,11 +270,13 @@ def truth_head(truth, S, nc, nkpt, require_kpt_conf=True, require_polar_kpt=True
         Number of keypoints
     require_kpt_conf: bool, default ``True``
         Whether to include keypoints.
+    require_polar_kpt: bool, default ``False``
+        Uses polar coordinate system.
 
     Returns
     -------
     dict
-        A dictionary with keys ``['conf', 'x', 'y', 'w', 'h', 'k_conf', 'kpt', 'kpt_polar', 'classes']``
+        A dictionary with keys ``['conf', 'x', 'y', 'w', 'h', 'k_conf', 'kpt', 'kpt_polar', 'classes', 'obj_indices]``
 
     Examples
     --------
