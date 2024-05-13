@@ -270,11 +270,13 @@ def truth_head(truth, S, nc, nkpt, require_kpt_conf=True, require_polar_kpt=True
         Number of keypoints
     require_kpt_conf: bool, default ``True``
         Whether to include keypoints.
+    require_polar_kpt: bool, default ``False``
+        Uses polar coordinate system.
 
     Returns
     -------
     dict
-        A dictionary with keys ``['conf', 'x', 'y', 'w', 'h', 'k_conf', 'kpt', 'kpt_polar', 'classes']``
+        A dictionary with keys ``['conf', 'x', 'y', 'w', 'h', 'k_conf', 'kpt', 'kpt_polar', 'classes', 'obj_indices]``
 
     Examples
     --------
@@ -312,12 +314,15 @@ def truth_head(truth, S, nc, nkpt, require_kpt_conf=True, require_polar_kpt=True
     ch, _, _ = truth.shape
     try:
         if require_kpt_conf:
-            assert(ch == (5 + nkpt + 2* nkpt + nc))
+            expected_ch = 5 + nkpt + 2* nkpt + nc
+            assert(ch == expected_ch)
         else:
-            assert(ch == (5 + 2 * nkpt + nc))
+            expected_ch = 5 + 2 * nkpt + nc
+            assert(ch == expected_ch)
     except Exception as e:
         print(e)
         print('\033[91m' + "Dimension of truth tensor does not match with requirement.\nMake sure to check if keypoint confidence is required.\n")
+        print('\033[91m' + f'Expected: {expected_ch}. Got: {ch}')
         raise
         
     conf = truth[0:1, ...]
@@ -366,6 +371,9 @@ def truth_head(truth, S, nc, nkpt, require_kpt_conf=True, require_polar_kpt=True
             k_conf_dict[f"k_conf_{k}"] = k_conf[k:k+1,...]
             k += 1
 
+    # Object index
+    obj_indices = torch.nonzero(conf.squeeze(0)).tolist()
+
     head = {"conf": conf,
             "x": x,
             "y": y,
@@ -374,7 +382,8 @@ def truth_head(truth, S, nc, nkpt, require_kpt_conf=True, require_polar_kpt=True
             "k_conf": k_conf_dict,
             "kpt": kpt_dict,
             "kpt_polar": kpt_polar_dict,
-            "classes": classes
+            "classes": classes,
+            "obj_indices": obj_indices
            }
 
     return head
