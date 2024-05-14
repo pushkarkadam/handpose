@@ -59,7 +59,7 @@ def render(images, head, is_relative=True, show_keypoint_label=True, classes={0:
         edges = []
         obj_classes = []
 
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=(W / 100, H / 100))
         ax.axis('off')
         ax.imshow(image)
         
@@ -132,7 +132,7 @@ def render(images, head, is_relative=True, show_keypoint_label=True, classes={0:
                 start, end = e
                 ax.plot(start, end, 'w-')
 
-        plt.tight_layout()
+        plt.tight_layout(pad=0)
         # Convert the plot to an image
         fig.canvas.draw()
         rendered_image = np.array(fig.canvas.renderer._renderer)
@@ -141,7 +141,7 @@ def render(images, head, is_relative=True, show_keypoint_label=True, classes={0:
 
     return rendered_images
 
-def display_images_in_grid(rendered_images, grid_shape=None):
+def display_images_in_grid(rendered_images, grid_shape=None, save_path=None):
     """Displays rendered images in grid.
 
     Parameters
@@ -150,6 +150,8 @@ def display_images_in_grid(rendered_images, grid_shape=None):
         A list of rendered images.
     grid_shape: tuple, default ``None``
         The grid to display the images.
+    save_path: str, default ``None``
+        The path where the figure must be saved.
 
     Examples
     --------
@@ -172,5 +174,9 @@ def display_images_in_grid(rendered_images, grid_shape=None):
         else:
             ax.axis('off')
 
-    plt.tight_layout()
+    plt.tight_layout(pad=0)
+
+    if save_path is not None:
+        plt.savefig(save_path)
+        
     plt.show()
