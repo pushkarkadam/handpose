@@ -113,8 +113,9 @@ def test_truth_head():
     assert(head2['kpt_polar']['r_0'].shape == (1, 3, 3))
     assert(head2['kpt_polar']['alpha_0'].shape == (1, 3, 3))
 
-    # Testing objectness
-    assert(head1['obj_indices'] == [[1,1], [2,2]])
+    # Checking object indices
+    assert(head1['obj_indices'].tolist() == [[1, 1], [2, 2]])
+    assert(head2['obj_indices'].tolist() == [[1, 1], [2, 2]])
 
     label2 = torch.Tensor([[1,0.5,0.5,0.5,0.5,0.5,0.6, 0.5, 0.1],[0,0.7,0.8,0.2,0.1, 0.2,0.3, 0.5, 0.1]])
     t3 = handpose.dataset.label_tensor(label2, S=3, nc=2, nkpt=2, cell_relative=True, require_kpt_conf=True)

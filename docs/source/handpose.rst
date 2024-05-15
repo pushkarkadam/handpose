@@ -20,3 +20,11 @@ Dataset
     :members:
     :undoc-members:
     :show-inheritance:
+
+Render
+^^^^^^
+
+.. automodule:: handpose.render 
+    :members:
+    :undoc-members:
+    :show-inheritance:
