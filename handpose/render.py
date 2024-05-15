@@ -5,7 +5,7 @@ import matplotlib.patches as patches
 from PIL import Image
 
 
-def render(images, head, is_relative=True, show_keypoint_label=True, classes={0: "right", 1:"left"}, box_color={0: "red", 1:"pink"}):
+def render_pose(images, head, is_relative=True, show_keypoint_label=True, classes={0: "Right", 1:"Left"}, box_color={0: "red", 1:"orange"}, text_color={0: "white", 1:"white"}):
     """Renders the image from the image head.
 
     Parameters
@@ -18,10 +18,12 @@ def render(images, head, is_relative=True, show_keypoint_label=True, classes={0:
         Checks if the center of bounding box coordinates are relative to the cell.
     show_keypoint_label: bool, default ``True``
         Shows the labels on rendered image.
-    classes: dict, default ``{0: "right", 1:"left"}``
+    classes: dict, default ``{0: "Right", 1:"Left"}``
         The classes in the dataset and their labels.
-    box_color: dict, default ``{0: "red", 1:"pink"}``
+    box_color: dict, default ``{0: "red", 1:"orange"}``
         Color of the bounding box.
+    text_color: str, default ``{0: "white", 1:"white"}``
+        Color of the class text over bounding box.
 
     Returns
     -------
@@ -30,7 +32,7 @@ def render(images, head, is_relative=True, show_keypoint_label=True, classes={0:
 
     Examples
     --------
-    >>> rendered_images = render(train_features, head, is_relative=True, show_keypoint_label=True)
+    >>> rendered_images = render_pose(train_features, head, is_relative=True, show_keypoint_label=True)
         
     """
     # Edges graph to connect keypoints
@@ -96,7 +98,7 @@ def render(images, head, is_relative=True, show_keypoint_label=True, classes={0:
 
             # Add text annotation for class name
             class_name = classes[obj_class]
-            ax.text(x_min, y_min, class_name, color='white', fontsize=10, ha='left', va='bottom', backgroundcolor=box_color[obj_class])
+            ax.text(x_min, y_min, class_name, color=text_color[obj_class], fontsize=10, ha='left', va='bottom', backgroundcolor=box_color[obj_class])
 
             # keypoints
             kpts_list = []
@@ -165,7 +167,7 @@ def display_images_in_grid(rendered_images, grid_shape=None, save_path=None):
     else:
         num_rows, num_cols = grid_shape
 
-    fig, axes = plt.subplots(num_rows, num_cols, figsize=(12, 8))
+    fig, axes = plt.subplots(num_rows, num_cols, figsize=(12, 12))
 
     for i, ax in enumerate(axes.flat):
         if i < len(rendered_images):
