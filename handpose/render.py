@@ -137,7 +137,7 @@ def render_pose(images, head, is_relative=True, show_keypoint_label=True, classe
         plt.tight_layout(pad=0)
         # Convert the plot to an image
         fig.canvas.draw()
-        rendered_image = np.array(fig.canvas.renderer._renderer)
+        rendered_image = np.array(fig.canvas.renderer._renderer)[:,:,:3]
         rendered_images.append(rendered_image)
         plt.close(fig)
 
