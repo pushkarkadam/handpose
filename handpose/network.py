@@ -81,6 +81,7 @@ class TransferNetwork(torch.nn.Module):
         return self.model(x)
 
     def summary(self):
+        """Returns the summary of the network."""
         return summary(self.model, input_size=self.input_size)
 
     def load_saved(self, network_path):
@@ -101,6 +102,7 @@ class TransferNetwork(torch.nn.Module):
 
     def save(self, network_path):
         """Saves the network.
+        
         Parameters
         ----------
         network_path: str
