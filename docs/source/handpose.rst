@@ -28,3 +28,11 @@ Render
     :members:
     :undoc-members:
     :show-inheritance:
+
+Network
+^^^^^^^
+
+.. automodule:: handpose.network 
+    :members:
+    :undoc-members:
+    :show-inheritance:

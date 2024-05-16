@@ -24,3 +24,4 @@ Added
 - ``HandDataset`` class for loading the data.
 - Rendering function added to render hand bounding box, pose, labels.
 - Displaying grid of images function added that plots images together in a grid.
+- Network loading using transfer learning added.
