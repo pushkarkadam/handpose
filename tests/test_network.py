@@ -119,3 +119,33 @@ def test_TransferNetwork4():
 
     assert isinstance(pred, torch.Tensor)
     assert (pred.shape == (1, test_out_features))
+
+def test_TransferNetwork5():
+    S = 7
+    B = 2
+    nkpt = 21
+    nc = 2
+    input_size = (3, 448, 448)
+    require_kpt_conf = True
+    pretrained=True
+    model_name = 'resnet18'
+
+    test_out_features = S * S * (B * (5 + 3 * nkpt) + nc)
+
+    model = handpose.network.TransferNetwork(
+        repo_or_dir=REPO,
+        model_name=model_name,
+        pretrained=pretrained,
+        S=S,
+        B=B,
+        nkpt=nkpt,
+        nc=nc,
+        input_size=input_size,
+        require_kpt_conf=require_kpt_conf
+    )
+
+    X = torch.randn((1, 3, 448, 448))
+    pred = model(X)
+
+    assert isinstance(pred, torch.Tensor)
+    assert (pred.shape == (1, test_out_features))
