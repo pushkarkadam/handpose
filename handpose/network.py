@@ -3,7 +3,17 @@ from torchsummary import summary
 
 
 class TransferNetwork(torch.nn.Module):
-    def __init__(self, repo_or_dir, model_name, pretrained, S, B, nkpt, nc, input_size, require_kpt_conf):
+    def __init__(self, 
+                 repo_or_dir, 
+                 model_name, 
+                 pretrained, 
+                 S, 
+                 B, 
+                 nkpt, 
+                 nc, 
+                 input_size, 
+                 require_kpt_conf, 
+                 freeze_weights):
         """Transfer learning network.
 
         Arguments
@@ -28,6 +38,8 @@ class TransferNetwork(torch.nn.Module):
             Use keypoint confidence.
         model: torch.nn.Module
             A CNN model
+        freeze_weights: bool
+            Freezes weights of the loaded CNN.
 
         Methods
         -------
@@ -48,8 +60,14 @@ class TransferNetwork(torch.nn.Module):
         self.input_size = input_size
         self.require_kpt_conf = require_kpt_conf
         self.pretrained = pretrained
+        self.freeze_weights = freeze_weights
         
         self.model = torch.hub.load(repo_or_dir, model_name, pretrained=pretrained)
+
+        # Freezes weights for transfer learning
+        if freeze_weights:
+            for param in self.model.parameters():
+                param.requires_grad = False
 
         module_names = [name for name, _ in self.model.named_children()]
 
