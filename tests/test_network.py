@@ -7,7 +7,7 @@ sys.path.append('../')
 
 import handpose
 
-REPO = 'pytorch/vision:v0.10.0'
+REPO = 'pytorch/vision:v0.17.1'
 
 def test_TransferNetwork1():
     S = 7
@@ -16,7 +16,7 @@ def test_TransferNetwork1():
     nc = 2
     input_size = (3, 224, 224)
     require_kpt_conf = True
-    pretrained = True
+    weights = 'ResNet18_Weights.IMAGENET1K_V1'
     model_name = 'resnet18'
     freeze_weights = True
 
@@ -25,7 +25,7 @@ def test_TransferNetwork1():
     model = handpose.network.TransferNetwork(
         repo_or_dir=REPO,
         model_name=model_name,
-        pretrained=pretrained,
+        weights=weights,
         S=S,
         B=B,
         nkpt=nkpt,
@@ -50,7 +50,7 @@ def test_TransferNetwork2():
     nc = 2
     input_size = (3, 224, 224)
     require_kpt_conf = False
-    pretrained=True
+    weights = 'ResNet18_Weights.IMAGENET1K_V1'
     model_name = 'resnet18'
     freeze_weights = True
 
@@ -59,7 +59,7 @@ def test_TransferNetwork2():
     model = handpose.network.TransferNetwork(
         repo_or_dir=REPO,
         model_name=model_name,
-        pretrained=pretrained,
+        weights=weights,
         S=S,
         B=B,
         nkpt=nkpt,
@@ -84,7 +84,7 @@ def test_TransferNetwork3():
     nc = 2
     input_size = (3, 224, 224)
     require_kpt_conf = True
-    pretrained = True
+    weights = 'AlexNet_Weights.IMAGENET1K_V1'
     model_name = 'alexnet'
     freeze_weights = True
 
@@ -93,7 +93,7 @@ def test_TransferNetwork3():
     model = handpose.network.TransferNetwork(
         repo_or_dir=REPO,
         model_name=model_name,
-        pretrained=pretrained,
+        weights=weights,
         S=S,
         B=B,
         nkpt=nkpt,
@@ -118,7 +118,7 @@ def test_TransferNetwork4():
     nc = 2
     input_size = (3, 224, 224)
     require_kpt_conf = True
-    pretrained = True
+    weights = 'ResNet18_Weights.IMAGENET1K_V1'
     model_name = 'resnet18'
     freeze_weights = True
 
@@ -127,7 +127,7 @@ def test_TransferNetwork4():
     model = handpose.network.TransferNetwork(
         repo_or_dir=REPO,
         model_name=model_name,
-        pretrained=pretrained,
+        weights=weights,
         S=S,
         B=B,
         nkpt=nkpt,
@@ -150,7 +150,7 @@ def test_TransferNetwork5():
     nc = 2
     input_size = (3, 448, 448)
     require_kpt_conf = True
-    pretrained = True
+    weights = 'ResNet18_Weights.IMAGENET1K_V1'
     model_name = 'resnet18'
     freeze_weights = False
 
@@ -159,7 +159,7 @@ def test_TransferNetwork5():
     model = handpose.network.TransferNetwork(
         repo_or_dir=REPO,
         model_name=model_name,
-        pretrained=pretrained,
+        weights=weights,
         S=S,
         B=B,
         nkpt=nkpt,
