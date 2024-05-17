@@ -180,3 +180,52 @@ def test_TransferNetwork5():
     # Testing not freezing the weights
     assert (params[0].requires_grad == True)
     assert (params[-1].requires_grad == True)
+
+def test_network_head1():
+    m = 16
+    S = 19
+    B = 4
+    nkpt = 21
+    nkpt_dim = 3
+    nc = 2
+    require_kpt_conf = True
+    tensor_ch = B * (5 + nkpt_dim * nkpt) + nc
+    out_features = S * S * tensor_ch
+
+    torch.manual_seed(0)
+    pred = torch.randn((m, out_features))
+
+    head = handpose.network.network_head(pred, require_kpt_conf, S, B, nkpt, nc)
+    
+    assert(list(head.keys()) == ['conf', 'x', 'y', 'w', 'h', 'k_conf', 'kpt', 'classes'])
+
+    ch_dim = 0
+    for k, v in head.items():
+        if isinstance(v, torch.Tensor):
+            _, ch_n, _, _ = v.shape
+            ch_dim += ch_n
+        else:
+            for i,j in v.items():
+                _, ch_n, _, _ = j.shape
+                ch_dim += ch_n
+
+    assert (ch_dim == tensor_ch)
+    assert (len(list(head['k_conf'].keys())) == nkpt)
+    assert (len(list(head['kpt'].keys())) == nkpt * 2)
+
+def test_network_head2():
+    m = 16
+    S = 19
+    B = 4
+    nkpt = 21
+    nkpt_dim = 3
+    nc = 2
+    require_kpt_conf = True
+    tensor_ch = B * (5 + nkpt_dim * nkpt) + nc
+    out_features = S * S * tensor_ch
+
+    torch.manual_seed(0)
+    pred = torch.randn(out_features)
+
+    with pytest.raises(Exception) as e:
+        head = handpose.network.network_head(pred, require_kpt_conf, S, B, nkpt, nc)

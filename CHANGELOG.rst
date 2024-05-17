@@ -25,3 +25,4 @@ Added
 - Rendering function added to render hand bounding box, pose, labels.
 - Displaying grid of images function added that plots images together in a grid.
 - Network loading using transfer learning added.
+- Network head added that uses the prediction tensor from network and stores them into annotation dictionary.
