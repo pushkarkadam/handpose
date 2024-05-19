@@ -36,3 +36,11 @@ Network
     :members:
     :undoc-members:
     :show-inheritance:
+
+Metrics
+^^^^^^^
+
+.. automodule:: handpose.metrics
+    :members:
+    :undoc-members:
+    :show-inheritance:
