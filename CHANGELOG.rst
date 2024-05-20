@@ -28,3 +28,5 @@ Added
 - Network head added that uses the prediction tensor from network and stores them into annotation dictionary.
 - Conversion from xywh to xyxy format added.
 - Intersection over union function added to metrics.
+- Best box head selection function based on maximum confidence added.
+- Head extraction function that extracts the bounding box and keypoint coordinates added.
