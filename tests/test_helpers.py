@@ -66,3 +66,98 @@ def test_xywh_to_xyxy():
 
     torch.testing.assert_close(torch.min(y_min).unsqueeze(0), torch.Tensor([1e-6]))
     torch.testing.assert_close(torch.min(x_max).unsqueeze(0), torch.Tensor([1 - 1e-6]))
+
+def test_best_box1():
+    """Tests best_box()"""
+
+    m = 2
+    S = 3
+    B = 2
+    nkpt = 21
+    nkpt_dim = 3
+    nc = 2
+    require_kpt_conf = True
+    tensor_ch = B * (5 + nkpt_dim * nkpt) + nc
+    out_features = S * S * tensor_ch
+
+    torch.manual_seed(0)
+    pred = torch.sigmoid(torch.randn((m, out_features)))
+
+    head = handpose.network.network_head(pred, require_kpt_conf, S, B, nkpt, nc)
+
+    best_head = handpose.helpers.best_box(head, 0.8)
+
+    assert(best_head['conf'].shape == (m, 1, S, S))
+    assert(best_head['x'].shape == (m, 1, S, S))
+    assert(best_head['y'].shape == (m, 1, S, S))
+    assert(best_head['w'].shape == (m, 1, S, S))
+    assert(best_head['h'].shape == (m, 1, S, S))
+
+    assert(len(list(best_head['k_conf'].keys())) == nkpt)
+    assert(len(list(best_head['kpt'].keys())) == 2 * nkpt)
+
+    assert(isinstance(best_head['obj_indices'], list))
+    assert(isinstance(best_head['obj_indices'][0], torch.Tensor))
+
+def test_best_box2():
+    """Tests best_box()"""
+
+    m = 16
+    S = 7
+    B = 4
+    nkpt = 21
+    nkpt_dim = 3
+    nc = 2
+    require_kpt_conf = True
+    tensor_ch = B * (5 + nkpt_dim * nkpt) + nc
+    out_features = S * S * tensor_ch
+
+    torch.manual_seed(0)
+    pred = torch.sigmoid(torch.randn((m, out_features)))
+
+    head = handpose.network.network_head(pred, require_kpt_conf, S, B, nkpt, nc)
+
+    best_head = handpose.helpers.best_box(head, 0.8)
+
+    assert(best_head['conf'].shape == (m, 1, S, S))
+    assert(best_head['x'].shape == (m, 1, S, S))
+    assert(best_head['y'].shape == (m, 1, S, S))
+    assert(best_head['w'].shape == (m, 1, S, S))
+    assert(best_head['h'].shape == (m, 1, S, S))
+
+    assert(len(list(best_head['k_conf'].keys())) == nkpt)
+    assert(len(list(best_head['kpt'].keys())) == 2 * nkpt)
+
+def test_extract_head():
+    """Test for extract_head()"""
+
+    m = 2
+    S = 3
+    B = 2
+    nkpt = 21
+    nkpt_dim = 3
+    nc = 2
+    require_kpt_conf = True
+    tensor_ch = B * (5 + nkpt_dim * nkpt) + nc
+    out_features = S * S * tensor_ch
+
+    torch.manual_seed(0)
+    pred = torch.sigmoid(torch.randn((m, out_features)))
+
+    head = handpose.network.network_head(pred, require_kpt_conf, S, B, nkpt, nc)
+
+    best_head = handpose.helpers.best_box(head, 0.8)
+
+    data = handpose.helpers.extract_head(best_head)
+
+    assert(isinstance(data, dict))
+    assert(isinstance(data['x'], list))
+    assert(isinstance(data['y'], list))
+    assert(isinstance(data['w'], list))
+    assert(isinstance(data['h'], list))
+    assert(isinstance(data['kx'], list))
+    assert(isinstance(data['ky'], list))
+
+    assert(data['x'][0] == [])
+    assert(data['kx'][0] == [])
+    assert(len(data['kx'][1][0]) == 21)
