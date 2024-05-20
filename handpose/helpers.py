@@ -171,3 +171,106 @@ def best_box(head, iou_threshold=0.5):
     best_head['obj_indices'] = obj_indices
 
     return best_head
+
+def extract_head(best_head):
+    """Extracts head data based on the indices
+
+    The return dictionary contains a list of values for each image.
+    If the image does not detect, then the list will be empty.
+    For an image with multiple detection ``x, y, w, h`` will have multiple values.
+    For multiple detection ``kx, ky`` will be a list of list with each detection being
+    21 keypoints.
+
+    Parameters
+    ----------
+    best_head: dict
+        A dictionary with the keys ``['conf', 'classes', 'x', 'y', 'w', 'h', 'k_conf', 'kpt', 'obj_indices']``.
+
+    Returns
+    -------
+    dict
+
+    Examples
+    --------
+    >>> m = 2
+    >>> S = 3
+    >>> B = 2
+    >>> nkpt = 21
+    >>> nkpt_dim = 3
+    >>> nc = 2
+    >>> require_kpt_conf = True
+    >>> tensor_ch = B * (5 + nkpt_dim * nkpt) + nc
+    >>> out_features = S * S * tensor_ch
+    >>> torch.manual_seed(0)
+    >>> pred = torch.sigmoid(torch.randn((m, out_features)))
+    >>> head = handpose.dataset.network_head(pred, require_kpt_conf, S, B, nkpt, nc)
+    >>> best_head = best_box(head, 0.8)
+    >>> data = extract_head(best_head)
+    
+    """
+    # Creating a ditionary
+    data = {'x': [],
+            'y': [],
+            'w': [],
+            'h': [],
+            'kx': [],
+            'ky': []
+           }
+
+    # Object indices
+    obj_indices = best_head['obj_indices']
+    
+    # Number of keypoints
+    nkpt = int(len(best_head['kpt'].keys()) / 2)
+
+    for i, indices in enumerate(obj_indices):
+        # Empty list to store values
+        image_x = []
+        image_y = []
+        image_w = []
+        image_h = []
+        image_kx = []
+        image_ky = []
+        
+        # Checking if the list of indices is empty
+        if not indices.tolist():
+            data['x'].append([])
+            data['y'].append([])
+            data['w'].append([])
+            data['h'].append([])
+            data['kx'].append([])
+            data['ky'].append([])
+            # continuing to next iteration
+            continue
+        
+        for c in indices.tolist():
+            # Extracting the index
+            x, y = c
+
+            # Bounding box
+            image_x.append(best_head['x'][i,0,x, y])
+            image_y.append(best_head['y'][i,0,x, y])
+            image_w.append(best_head['w'][i,0,x, y])
+            image_h.append(best_head['h'][i,0,x, y])
+    
+            # Keypoints
+            kpt = best_head['kpt']
+            temp_kx_list = []
+            temp_ky_list = []
+            for k_idx in range(nkpt):
+                temp_x = kpt[f'kx_{k_idx}'][i,0,x, y]
+                temp_y = kpt[f'ky_{k_idx}'][i,0,x, y]
+                temp_kx_list.append(temp_x)
+                temp_ky_list.append(temp_y)
+    
+            image_kx.append(temp_kx_list)
+            image_ky.append(temp_ky_list)
+    
+        data['x'].append(image_x)
+        data['y'].append(image_y)
+        data['w'].append(image_w)
+        data['h'].append(image_h)
+        data['kx'].append(image_kx)
+        data['ky'].append(image_ky)
+
+    return data

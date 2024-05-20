@@ -127,3 +127,37 @@ def test_best_box2():
 
     assert(len(list(best_head['k_conf'].keys())) == nkpt)
     assert(len(list(best_head['kpt'].keys())) == 2 * nkpt)
+
+def test_extract_head():
+    """Test for extract_head()"""
+
+    m = 2
+    S = 3
+    B = 2
+    nkpt = 21
+    nkpt_dim = 3
+    nc = 2
+    require_kpt_conf = True
+    tensor_ch = B * (5 + nkpt_dim * nkpt) + nc
+    out_features = S * S * tensor_ch
+
+    torch.manual_seed(0)
+    pred = torch.sigmoid(torch.randn((m, out_features)))
+
+    head = handpose.network.network_head(pred, require_kpt_conf, S, B, nkpt, nc)
+
+    best_head = handpose.helpers.best_box(head, 0.8)
+
+    data = handpose.helpers.extract_head(best_head)
+
+    assert(isinstance(data, dict))
+    assert(isinstance(data['x'], list))
+    assert(isinstance(data['y'], list))
+    assert(isinstance(data['w'], list))
+    assert(isinstance(data['h'], list))
+    assert(isinstance(data['kx'], list))
+    assert(isinstance(data['ky'], list))
+
+    assert(data['x'][0] == [])
+    assert(data['kx'][0] == [])
+    assert(len(data['kx'][1][0]) == 21)
