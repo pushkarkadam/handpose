@@ -255,3 +255,63 @@ def network_head(pred,
            }
     
     return head
+
+def head_activations(head):
+    """Returns the same dictionary with the tensors through activation functions.
+
+    Parameters
+    ----------
+    head: dict
+        A dictionary of keys ``['conf', 'x', 'y', 'w', 'h', 'k_conf', 'kpt', 'classes']``
+
+    Returns
+    -------
+    dict
+
+    Examples
+    --------
+    >>> m = 2
+    >>> S = 3
+    >>> B = 2
+    >>> nkpt = 21
+    >>> nkpt_dim = 3
+    >>> nc = 2
+    >>> require_kpt_conf = True
+    >>> tensor_ch = B * (5 + nkpt_dim * nkpt) + nc
+    >>> out_features = S * S * tensor_ch
+    >>> torch.manual_seed(0)
+    >>> pred = torch.randn((m, out_features))
+    >>> head = handpose.network.network_head(pred, require_kpt_conf, S, B, nkpt, nc)
+    >>> head_act = head_activations(head)
+    
+    """
+
+    sigmoid = torch.nn.Sigmoid()
+    softmax = torch.nn.Softmax(dim=1)
+    
+    conf = sigmoid(head['conf'])
+    x = sigmoid(head['x'])
+    y = sigmoid(head['y'])
+    w = sigmoid(head['w'])
+    h = sigmoid(head['h'])
+
+    k_conf = dict()
+    for k, v in head['k_conf'].items():
+        k_conf[k] = sigmoid(v)
+
+    kpt = dict()
+    for k, v in head['kpt'].items():
+        kpt[k] = sigmoid(v)
+
+    classes = softmax(head['classes'])
+
+    head_act = {'conf': conf,
+                'x': x,
+                'y': y,
+                'w': w,
+                'h': h,
+                'k_conf': k_conf,
+                'kpt': kpt,
+                'classes': classes
+               }
+    return head_act

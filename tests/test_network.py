@@ -229,3 +229,32 @@ def test_network_head2():
 
     with pytest.raises(Exception) as e:
         head = handpose.network.network_head(pred, require_kpt_conf, S, B, nkpt, nc)
+
+def test_head_activations():
+    """Tests head_activation() function"""
+    m = 16
+    S = 19
+    B = 4
+    nkpt = 21
+    nkpt_dim = 3
+    nc = 2
+    require_kpt_conf = True
+    tensor_ch = B * (5 + nkpt_dim * nkpt) + nc
+    out_features = S * S * tensor_ch
+
+    torch.manual_seed(0)
+    pred = torch.randn((m, out_features))
+
+    head = handpose.network.network_head(pred, require_kpt_conf, S, B, nkpt, nc)
+
+    head_act = handpose.network.head_activations(head)
+
+    assert(list(head_act.keys()) == ['conf', 'x', 'y', 'w', 'h', 'k_conf', 'kpt', 'classes'])
+
+    assert(head['x'].shape == head_act['x'].shape)
+    assert(float(torch.max(head_act['x'])) <= 1.0)
+    assert(float(torch.min(head_act['x'])) >= 0.0)
+
+    head_classes = torch.sum(head_act['classes'][0], dim=0)
+    ones = torch.ones(S, S)
+    torch.testing.assert_close(head_classes, ones)
