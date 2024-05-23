@@ -2,7 +2,8 @@ import os
 import torch
 import numpy as np
 from torch.utils.data import Dataset 
-from torchvision.io import read_image
+import torchvision.transforms as transforms
+from PIL import Image
 
 
 def read_label(file_path):
@@ -456,7 +457,14 @@ class HandDataset(Dataset):
         img_path = os.path.join(self.img_dir, current_label + '.jpg')
         label_path = os.path.join(self.label_dir, current_label + '.txt')
         
-        image = read_image(img_path)
+        # Read image file using PIL module
+        image = Image.open(img_path)
+
+        # Normalise image
+        transform = transforms.ToTensor()
+
+        image = transform(image)
+        
         label = read_label(label_path)
         truth_tensor = label_tensor(label, S=self.S, nc=self.nc, nkpt=self.nkpt, cell_relative=self.cell_relative, require_kpt_conf=self.require_kpt_conf)
         head = truth_head(truth_tensor, S=self.S, nc=self.nc, nkpt=self.nkpt, require_kpt_conf=self.require_kpt_conf)
