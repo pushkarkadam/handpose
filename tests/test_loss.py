@@ -82,3 +82,14 @@ def test_conf_loss():
     loss = handpose.loss.conf_loss(conf_truth, conf_pred, 0.5)
 
     torch.testing.assert_close(loss, torch.tensor(0.7200), rtol=1e-4, atol=1e-4)
+
+def test_class_loss():
+    """Tests class_loss()"""
+
+    classes_truth = torch.cat([torch.ones(1,1,3,3), torch.zeros(1,1,3,3)], dim=1)
+    classes_pred = torch.cat([torch.ones(1,1,3,3), torch.zeros(1,1,3,3)], dim=1)
+    obj_conf = torch.ones((1,1,3,3))
+
+    loss = handpose.loss.class_loss(classes_truth, classes_pred, obj_conf)
+
+    torch.testing.assert_close(loss, torch.tensor(0.0))

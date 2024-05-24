@@ -54,7 +54,6 @@ def box_loss(box_truth, box_pred, obj_conf, lambda_coord, epsilon=1e-6):
     >>> box_pred = (x_p, y_p, w_p, h_p)
     >>> obj_conf = torch.ones((16,1,19,19))
     >>> loss = handpose.loss.box_loss(box_truth, box_pred, obj_conf, lambda_coord=0.5)
-    tensor(0.)
     
     """
     xt, yt, wt, ht = box_truth
@@ -104,7 +103,6 @@ def conf_loss(conf_truth, conf_pred, lambda_noobj):
     >>> conf_truth = torch.Tensor([[0,0,0],[0,1,0],[0,0,0]]).reshape((1,1,3,3))
     >>> conf_pred = torch.Tensor([[0.1,0.2,0.4],[0.8,0.9,0.7],[0.2,0.01,0.2]]).reshape((1,1,3,3))
     >>> loss = handpose.loss.conf_loss(conf_truth, conf_pred, 0.5)
-    tensor(0.7200)
 
     """
 
@@ -120,5 +118,50 @@ def conf_loss(conf_truth, conf_pred, lambda_noobj):
     noobj_loss = mse(ct * noobj_indicator, cp * noobj_indicator)
 
     loss = obj_loss + lambda_noobj * noobj_loss
+
+    return loss
+
+def class_loss(classes_truth, classes_pred, obj_conf):
+    r"""Class loss.
+
+    .. math::
+
+        L_{class} = \sum_{i = 0}^{S^2}
+        1_i^{\text{obj}}
+            \sum_{c \in \textrm{classes}}
+                \left(
+                    p_i(c) - \hat{p}_i(c)
+                \right)^2
+    
+    
+    Parameters
+    ----------
+    classes_truth: torch.Tensor
+        A tensor of truth classes.
+    classes_pred: torch.Tensor
+        A tensor of prediction classes.
+    obj_conf: torch.Tensor
+        A tensor of object confidence from ground truth.
+
+    Returns
+    -------
+    torch.tensor
+    
+    Examples
+    --------
+    >>> classes_truth = torch.cat([torch.ones(1,1,3,3), torch.zeros(1,1,3,3)], dim=1)
+    >>> classes_pred = torch.cat([torch.ones(1,1,3,3), torch.zeros(1,1,3,3)], dim=1)
+    >>> obj_conf = torch.ones((1,1,3,3))
+    >>> loss = handpose.loss.class_loss(classes_truth, classes_pred, obj_conf)
+
+    """
+    ct = classes_truth
+    cp = classes_pred
+    obj_indicator = obj_conf
+
+    # Binary Cross Entropy loss
+    bce_loss = torch.nn.BCELoss()
+
+    loss = bce_loss(cp * obj_indicator, ct * obj_indicator)
 
     return loss
