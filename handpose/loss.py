@@ -13,8 +13,10 @@ def box_loss(box_truth, box_pred, obj_conf, lambda_coord, epsilon=1e-6):
         L_{box} = L_{xy} + L_{wh}
 
     .. note::
-        The indicator function :math:`1` used in the above equation performs the work of selecting the best bounding box :math:`j`
+        The indicator function :math:`1` used in the above equation performs the work of
+        selecting the best bounding box :math:`j`
         for each grid cell :math:`i`.
+        The indicator 
         This selection process is done using 
         :func:`handpose.helpers.best_box`.
 
@@ -49,7 +51,8 @@ def box_loss(box_truth, box_pred, obj_conf, lambda_coord, epsilon=1e-6):
     >>> h_p = copy.deepcopy(h)
     >>> box_truth = (x, y, w, h)
     >>> box_pred = (x_p, y_p, w_p, h_p)
-    >>> loss = handpose.loss.box_loss(box_truth, box_pred, lambda_coord=0.5)
+    >>> obj_conf = torch.ones((16,1,19,19))
+    >>> loss = handpose.loss.box_loss(box_truth, box_pred, obj_conf, lambda_coord=0.5)
     tensor(0.)
     
     """
