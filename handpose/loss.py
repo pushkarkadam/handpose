@@ -1,7 +1,7 @@
 import torch 
 
 
-def box_loss(box_truth, box_pred, lambda_coord, epsilon=1e-6):
+def box_loss(box_truth, box_pred, obj_conf, lambda_coord, epsilon=1e-6):
     r"""Box loss
 
     Calculates the box loss with ``x y w h`` bounding box coordinates
@@ -24,6 +24,9 @@ def box_loss(box_truth, box_pred, lambda_coord, epsilon=1e-6):
         A tuple of ground truth bounding box coordinates ``(x, y, w, h)``.
     box_pred: tuple
         A tuple of ground truth bounding box coordinates ``(x_pred, y_pred, w_pred, h_pred)``.
+    obj_conf: torch.Tensor
+        A tensor which indicates whether the grid cell consists an object.
+        This is the ``conf`` tensor in the ``head``.
     lamda_coord: float
         A multiplier used to scale the loss.
     epsilon: float, default ``1e-6``
@@ -53,12 +56,17 @@ def box_loss(box_truth, box_pred, lambda_coord, epsilon=1e-6):
     xt, yt, wt, ht = box_truth
     xp, yp, wp, hp = box_pred
 
+    # Works as an indicator function
+    obj_indicator = obj_conf
+
+    # Mean square error
     mse = torch.nn.MSELoss(reduction="sum")
 
-    xd = mse(xt, xp)
-    yd = mse(yt, yp)
-    wd = mse(torch.sqrt(wt + epsilon), torch.sqrt(wp + epsilon))
-    hd = mse(torch.sqrt(ht + epsilon), torch.sqrt(hp + epsilon))
+    # Using indicator function by multiplying the box coordinates
+    xd = mse(xt * obj_indicator, xp * obj_indicator)
+    yd = mse(yt * obj_indicator, yp * obj_indicator)
+    wd = mse(torch.sqrt(wt + epsilon) * obj_indicator, torch.sqrt(wp + epsilon) * obj_indicator)
+    hd = mse(torch.sqrt(ht + epsilon) * obj_indicator, torch.sqrt(hp + epsilon) * obj_indicator)
 
     loss = lambda_coord * ((xd + yd) + (wd + hd))
 

@@ -20,10 +20,12 @@ def test_box_loss1():
     w_p = copy.deepcopy(w)
     h_p = copy.deepcopy(h)
 
+    obj_conf = torch.Tensor([1]).reshape(1,1,1,1)
+
     box_truth = (x, y, w, h)
     box_pred = (x_p, y_p, w_p, h_p)
 
-    loss = handpose.loss.box_loss(box_truth, box_pred, lambda_coord=0.5)
+    loss = handpose.loss.box_loss(box_truth, box_pred, obj_conf, lambda_coord=0.5)
 
     assert(loss == torch.tensor(0))
 
@@ -40,10 +42,12 @@ def test_box_loss2():
     w_p = copy.deepcopy(w)
     h_p = copy.deepcopy(h)
 
+    obj_conf = torch.Tensor([[1,0],[0, 0]]).reshape(1,1,2,2)
+
     box_truth = (x, y, w, h)
     box_pred = (x_p, y_p, w_p, h_p)
 
-    loss = handpose.loss.box_loss(box_truth, box_pred, lambda_coord=0.5)
+    loss = handpose.loss.box_loss(box_truth, box_pred, obj_conf, lambda_coord=0.5)
 
     assert(loss == torch.tensor(0))
 
@@ -60,9 +64,11 @@ def test_box_loss3():
     w_p = copy.deepcopy(w)
     h_p = copy.deepcopy(h)
 
+    obj_conf = torch.ones((16,1,19,19))
+
     box_truth = (x, y, w, h)
     box_pred = (x_p, y_p, w_p, h_p)
 
-    loss = handpose.loss.box_loss(box_truth, box_pred, lambda_coord=0.5)
+    loss = handpose.loss.box_loss(box_truth, box_pred, obj_conf, lambda_coord=0.5)
 
     assert(loss == torch.tensor(0))
