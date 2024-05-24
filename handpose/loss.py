@@ -1,4 +1,5 @@
 import torch 
+import copy
 
 
 def box_loss(box_truth, box_pred, obj_conf, lambda_coord, epsilon=1e-6):
@@ -72,5 +73,52 @@ def box_loss(box_truth, box_pred, obj_conf, lambda_coord, epsilon=1e-6):
     hd = mse(torch.sqrt(ht + epsilon) * obj_indicator, torch.sqrt(hp + epsilon) * obj_indicator)
 
     loss = lambda_coord * ((xd + yd) + (wd + hd))
+
+    return loss
+
+def conf_loss(conf_truth, conf_pred, lambda_noobj):
+    r"""Confidence loss.
+
+    Computes the confidence loss.
+
+    .. math::
+        L_{obj} = \sum_{i=0}^{S^2} \sum_{j=0}^{B} 1_{ij}^{\text{obj}} \left( C_i - \hat{C_i} \right) \\
+        L_{noobj} = \lambda_{noobj}\sum_{i=0}^{S^2} \sum_{j=0}^{B} 1_{ij}^{\text{noobj}} \left( C_i - \hat{C_i} \right) \\    
+        L_{conf} = L_{obj} + \lambda_{noobj} L_{noobj}
+    
+    Parameters
+    ----------
+    conf_truth: torch.Tensor
+        A tensor of confidence for ground truth.
+    conf_pred: torch.Tensor
+        A tensor of confidence for prediction.
+    lambda_noobj: float
+        A multiplier for noobj present in the grid cell.
+
+    Returns
+    -------
+    torch.tensor
+
+    Examples
+    --------
+    >>> conf_truth = torch.Tensor([[0,0,0],[0,1,0],[0,0,0]]).reshape((1,1,3,3))
+    >>> conf_pred = torch.Tensor([[0.1,0.2,0.4],[0.8,0.9,0.7],[0.2,0.01,0.2]]).reshape((1,1,3,3))
+    >>> loss = handpose.loss.conf_loss(conf_truth, conf_pred, 0.5)
+    tensor(0.7200)
+
+    """
+
+    # Equivalent of indicator function
+    obj_indicator = copy.deepcopy(conf_truth)
+    noobj_indicator = 1 - obj_indicator 
+    
+    ct = conf_truth
+    cp = conf_pred
+    mse = torch.nn.MSELoss(reduction="sum")
+
+    obj_loss = mse(ct * obj_indicator, cp * obj_indicator)
+    noobj_loss = mse(ct * noobj_indicator, cp * noobj_indicator)
+
+    loss = obj_loss + lambda_noobj * noobj_loss
 
     return loss

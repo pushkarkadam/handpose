@@ -72,3 +72,13 @@ def test_box_loss3():
     loss = handpose.loss.box_loss(box_truth, box_pred, obj_conf, lambda_coord=0.5)
 
     assert(loss == torch.tensor(0))
+
+def test_conf_loss():
+    """Tests conf_loss()"""
+
+    conf_truth = torch.Tensor([[0,0,0],[0,1,0],[0,0,0]]).reshape((1,1,3,3))
+    conf_pred = torch.Tensor([[0.1,0.2,0.4],[0.8,0.9,0.7],[0.2,0.01,0.2]]).reshape((1,1,3,3))
+
+    loss = handpose.loss.conf_loss(conf_truth, conf_pred, 0.5)
+
+    torch.testing.assert_close(loss, torch.tensor(0.7200), rtol=1e-4, atol=1e-4)
