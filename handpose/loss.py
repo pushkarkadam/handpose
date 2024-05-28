@@ -172,7 +172,7 @@ def kpt_loss(kpt_truth, kpt_pred, obj_conf, nkpt):
     Keypoint loss that uses mean square error.
 
     .. math::
-        L_{kpt} = \sum_{i=0}^{S^2} \sum_{j=0}^{B} 1_{ij}^{\text{obj}} \left[ \frac{ (kx_i - \hat{kx}_i)^2 + (ky_i - \hat{ky}_i)^2}{2} \right] \\
+        L_{kpt} = \sum_{i=0}^{S^2} \sum_{j=0}^{B} 1_{ij}^{\text{obj}} \exp \left[ \frac{ (kx_i - \hat{kx}_i)^2 + (ky_i - \hat{ky}_i)^2}{2} \right] \\
 
     Parameters
     ----------
