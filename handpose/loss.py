@@ -224,6 +224,6 @@ def kpt_loss(kpt_truth, kpt_pred, obj_conf, nkpt):
         dx = mse(kx_truth, kx_pred)
         dy = mse(ky_truth, ky_pred)
 
-        loss +=  (dx + dy) / 2.0
+        loss +=  torch.exp((dx + dy) / 2.0)
 
     return loss

@@ -111,7 +111,7 @@ def test_kpt_loss1():
     nkpt = 2
     loss = handpose.loss.kpt_loss(kpt_truth, kpt_pred, obj_conf, nkpt)
 
-    torch.testing.assert_close(loss, torch.tensor(0.0))
+    torch.testing.assert_close(loss, torch.tensor(2.0))
 
 def test_kpt_loss2():
     """Tests kpt_loss()"""
@@ -133,4 +133,4 @@ def test_kpt_loss2():
 
     loss = handpose.loss.kpt_loss(kpt_truth, kpt_pred, obj_conf, nkpt)
 
-    torch.testing.assert_close(loss, torch.tensor(0.0))
+    torch.testing.assert_close(loss, torch.tensor(2.0))
