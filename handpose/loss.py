@@ -166,13 +166,13 @@ def class_loss(classes_truth, classes_pred, obj_conf):
 
     return loss
 
-def kpt_loss(kpt_truth, kpt_pred, obj_conf, nkpt):
+def kpt_loss(kpt_truth, kpt_pred, obj_conf, nkpt, lambda_kpt=1):
     r"""Keypoint loss.
 
     Keypoint loss that uses mean square error.
 
     .. math::
-        L_{kpt} = \sum_{i=0}^{S^2} \sum_{j=0}^{B} 1_{ij}^{\text{obj}} \exp \left[ \frac{ (kx_i - \hat{kx}_i)^2 + (ky_i - \hat{ky}_i)^2}{2} \right] \\
+        L_{kpt} = \sum_{i=0}^{S^2} \sum_{j=0}^{B} 1_{ij}^{\text{obj}} \left[ \frac{ (kx_i - \hat{kx}_i)^2 + (ky_i - \hat{ky}_i)^2}{2} \right] \\
 
     Parameters
     ----------
@@ -226,4 +226,4 @@ def kpt_loss(kpt_truth, kpt_pred, obj_conf, nkpt):
 
         loss +=  torch.exp((dx + dy) / 2.0)
 
-    return loss
+    return lambda_kpt * loss
