@@ -134,3 +134,40 @@ def test_kpt_loss2():
     loss = handpose.loss.kpt_loss(kpt_truth, kpt_pred, obj_conf, nkpt)
 
     torch.testing.assert_close(loss, torch.tensor(2.0))
+
+def test_kpt_conf_loss1():
+    """Tests kpt_conf_loss()"""
+
+    kpt_truth = {'k_conf_0': torch.Tensor([[0,0,0],[0,1,0], [0,0,0]]).reshape(1,1,3,3),
+             'k_conf_1': torch.Tensor([[0,0,0],[0,1,0], [0,0,0]]).reshape(1,1,3,3)
+            }
+
+    kpt_pred = {'k_conf_0': torch.Tensor([[0,0,0],[0,1,0], [0,0,0]]).reshape(1,1,3,3),
+                'k_conf_1': torch.Tensor([[0,0,0],[0,1,0], [0,0,0]]).reshape(1,1,3,3)
+                }
+
+    obj_conf = torch.Tensor([[0,0,0],[0,1,0],[0,0,0]]).reshape(1,1,3,3)
+
+    nkpt = 2
+
+    loss = handpose.loss.kpt_conf_loss(kpt_truth, kpt_pred, obj_conf, nkpt)
+
+    torch.testing.assert_close(loss, torch.tensor(0.0))
+
+def test_kpt_conf_loss2():
+    """Tests kpt_conf_loss()"""
+
+    kpt_truth = {'k_conf_0': torch.Tensor([[1],[1]]).reshape(2,1,1,1),
+         'k_conf_1': torch.Tensor([[1],[1]]).reshape(2,1,1,1)
+        }
+    kpt_pred = {'k_conf_0': torch.Tensor([[1],[1]]).reshape(2,1,1,1),
+            'k_conf_1': torch.Tensor([[1],[1]]).reshape(2,1,1,1)
+            }
+
+    obj_conf = torch.Tensor([[1],[1]]).reshape(2,1,1,1)
+
+    nkpt = 2
+
+    loss = handpose.loss.kpt_conf_loss(kpt_truth, kpt_pred, obj_conf, nkpt)
+
+    torch.testing.assert_close(loss, torch.tensor(0.0))

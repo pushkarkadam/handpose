@@ -227,3 +227,51 @@ def kpt_loss(kpt_truth, kpt_pred, obj_conf, nkpt, lambda_kpt=1):
         loss +=  torch.exp((dx + dy) / 2.0)
 
     return lambda_kpt * loss
+
+def kpt_conf_loss(k_conf_truth, k_conf_pred, obj_conf, nkpt, lambda_kpt_conf=1):
+    """Calculates the loss of keypoint confidence.
+
+    .. math::
+        L_{obj} = \sum_{i=0}^{S^2} \sum_{j=0}^{B} 1_{ij}^{\text{obj}} \left( k_i - \hat{k_i} \right)
+    
+    Parameters
+    ----------
+    k_conf_truth: dict
+        A dictionary of truth keypoint confidence.
+    k_conf_pred: dict
+        A dictionary of prediction keypoint confidence.
+    obj_conf: torch.Tensor
+        A torch tensor of size ``(m, 1, S, S)``
+    nkpt: int
+        Number of keypoints.
+
+    Returns
+    -------
+    torch.tensor
+
+    Examples
+    --------
+    >>> kpt_truth = {'k_conf_0': torch.Tensor([[0,0,0],[0,1,0], [0,0,0]]).reshape(1,1,3,3),
+             'k_conf_1': torch.Tensor([[0,0,0],[0,1,0], [0,0,0]]).reshape(1,1,3,3)
+            }
+    >>> kpt_pred = {'k_conf_0': torch.Tensor([[0,0,0],[0,1,0], [0,0,0]]).reshape(1,1,3,3),
+                 'k_conf_1': torch.Tensor([[0,0,0],[0,1,0], [0,0,0]]).reshape(1,1,3,3)
+                } 
+    >>> obj_conf = torch.Tensor([[0,0,0],[0,1,0],[0,0,0]]).reshape(1,1,3,3) 
+    >>> nkpt = 2
+    >>> loss = kpt_conf_loss(kpt_truth, kpt_pred, obj_conf, nkpt)
+
+    """
+    loss = torch.tensor(0.0)
+
+    obj_indicator = obj_conf
+    mse = torch.nn.MSELoss(reduction="sum")
+    
+    for i in range(nkpt):
+        # truth tensor
+        conf_truth = k_conf_truth[f'k_conf_{i}']
+        conf_pred = k_conf_pred[f'k_conf_{i}'] * obj_indicator
+
+        loss += mse(conf_truth, conf_pred)
+
+    return lambda_kpt_conf * loss
