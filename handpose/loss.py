@@ -184,6 +184,8 @@ def kpt_loss(kpt_truth, kpt_pred, obj_conf, nkpt, lambda_kpt=1):
         A torch tensor of size ``(m, 1, S, S)``
     nkpt: int
         Number of keypoints.
+    lambda_kpt: int, default ``1``
+        A multiplier.
 
     Returns
     -------
@@ -229,7 +231,7 @@ def kpt_loss(kpt_truth, kpt_pred, obj_conf, nkpt, lambda_kpt=1):
     return lambda_kpt * loss
 
 def kpt_conf_loss(k_conf_truth, k_conf_pred, obj_conf, nkpt, lambda_kpt_conf=1):
-    """Calculates the loss of keypoint confidence.
+    r"""Calculates the loss of keypoint confidence.
 
     .. math::
         L_{obj} = \sum_{i=0}^{S^2} \sum_{j=0}^{B} 1_{ij}^{\text{obj}} \left( k_i - \hat{k_i} \right)
@@ -244,6 +246,8 @@ def kpt_conf_loss(k_conf_truth, k_conf_pred, obj_conf, nkpt, lambda_kpt_conf=1):
         A torch tensor of size ``(m, 1, S, S)``
     nkpt: int
         Number of keypoints.
+    lambda_kpt_conf: int, default ``1``
+        A multiplier.
 
     Returns
     -------
