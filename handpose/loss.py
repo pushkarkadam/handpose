@@ -165,3 +165,65 @@ def class_loss(classes_truth, classes_pred, obj_conf):
     loss = bce_loss(cp * obj_indicator, ct * obj_indicator)
 
     return loss
+
+def kpt_loss(kpt_truth, kpt_pred, obj_conf, nkpt):
+    r"""Keypoint loss.
+
+    Keypoint loss that uses mean square error.
+
+    .. math::
+        L_{kpt} = \sum_{i=0}^{S^2} \sum_{j=0}^{B} 1_{ij}^{\text{obj}} \left[ \frac{ (kx_i - \hat{kx}_i)^2 + (ky_i - \hat{ky}_i)^2}{2} \right] \\
+
+    Parameters
+    ----------
+    kpt_truth: dict
+        A dictionary of truth keypoints
+    kpt_pred: dict
+        A dictionary of prediction keypoints
+    obj_conf: torch.Tensor
+        A torch tensor of size ``(m, 1, S, S)``
+    nkpt: int
+        Number of keypoints.
+
+    Returns
+    -------
+    torch.tensor
+
+    Examples
+    --------
+    >>> kpt_truth = {'kx_0': torch.Tensor([[0,0,0],[0,0.5,0], [0,0,0]]).reshape(1,1,3,3),
+             'ky_0': torch.Tensor([[0,0,0],[0,0.5,0], [0,0,0]]).reshape(1,1,3,3),
+             'kx_1': torch.Tensor([[0,0,0],[0,0.2,0], [0,0,0]]).reshape(1,1,3,3),
+             'ky_1': torch.Tensor([[0,0,0],[0,0.2,0], [0,0,0]]).reshape(1,1,3,3),
+            }
+    >>> kpt_pred = {'kx_0': torch.Tensor([[0,0,0],[0,0.5,0], [0,0,0]]).reshape(1,1,3,3),
+             'ky_0': torch.Tensor([[0,0,0],[0,0.5,0], [0,0,0]]).reshape(1,1,3,3),
+             'kx_1': torch.Tensor([[0,0,0],[0,0.2,0], [0,0,0]]).reshape(1,1,3,3),
+             'ky_1': torch.Tensor([[0,0,0],[0,0.2,0], [0,0,0]]).reshape(1,1,3,3),
+            }
+    >>> obj_conf = torch.Tensor([[0,0,0],[0,1,0],[0,0,0]]).reshape(1,1,3,3)
+    >>> nkpt = 2
+    >>> loss = kpt_loss(kpt_truth, kpt_pred, obj_conf, nkpt)
+    
+    """
+
+    loss = torch.tensor(0.0)
+
+    obj_indicator = obj_conf
+    mse = torch.nn.MSELoss(reduction="sum")
+    
+    for i in range(nkpt):
+        # truth tensor
+        kx_truth = kpt_truth[f'kx_{i}']
+        ky_truth = kpt_truth[f'ky_{i}']
+
+        # prediction tensors
+        kx_pred = kpt_pred[f'kx_{i}'] * obj_indicator
+        ky_pred = kpt_pred[f'ky_{i}'] * obj_indicator
+
+        dx = mse(kx_truth, kx_pred)
+        dy = mse(ky_truth, ky_pred)
+
+        loss +=  (dx + dy) / 2.0
+
+    return loss

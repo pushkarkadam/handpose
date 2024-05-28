@@ -93,3 +93,44 @@ def test_class_loss():
     loss = handpose.loss.class_loss(classes_truth, classes_pred, obj_conf)
 
     torch.testing.assert_close(loss, torch.tensor(0.0))
+
+def test_kpt_loss1():
+    """Tests kpt_loss()"""
+
+    kpt_truth = {'kx_0': torch.Tensor([[0,0,0],[0,0.5,0], [0,0,0]]).reshape(1,1,3,3),
+         'ky_0': torch.Tensor([[0,0,0],[0,0.5,0], [0,0,0]]).reshape(1,1,3,3),
+         'kx_1': torch.Tensor([[0,0,0],[0,0.2,0], [0,0,0]]).reshape(1,1,3,3),
+         'ky_1': torch.Tensor([[0,0,0],[0,0.2,0], [0,0,0]]).reshape(1,1,3,3),
+        }
+    kpt_pred = {'kx_0': torch.Tensor([[0,0,0],[0,0.5,0], [0,0,0]]).reshape(1,1,3,3),
+            'ky_0': torch.Tensor([[0,0,0],[0,0.5,0], [0,0,0]]).reshape(1,1,3,3),
+            'kx_1': torch.Tensor([[0,0,0],[0,0.2,0], [0,0,0]]).reshape(1,1,3,3),
+            'ky_1': torch.Tensor([[0,0,0],[0,0.2,0], [0,0,0]]).reshape(1,1,3,3),
+            }
+    obj_conf = torch.Tensor([[0,0,0],[0,1,0],[0,0,0]]).reshape(1,1,3,3)
+    nkpt = 2
+    loss = handpose.loss.kpt_loss(kpt_truth, kpt_pred, obj_conf, nkpt)
+
+    torch.testing.assert_close(loss, torch.tensor(0.0))
+
+def test_kpt_loss2():
+    """Tests kpt_loss()"""
+
+    kpt_truth = {'kx_0': torch.Tensor([[0.5],[0.5]]).reshape(2,1,1,1),
+         'ky_0': torch.Tensor([[0.5],[0.5]]).reshape(2,1,1,1),
+         'kx_1': torch.Tensor([[0.2],[0.2]]).reshape(2,1,1,1),
+         'ky_1': torch.Tensor([[0.2],[0.2]]).reshape(2,1,1,1),
+        }
+    kpt_pred = {'kx_0': torch.Tensor([[0.5],[0.5]]).reshape(2,1,1,1),
+            'ky_0': torch.Tensor([[0.5],[0.5]]).reshape(2,1,1,1),
+            'kx_1': torch.Tensor([[0.2],[0.2]]).reshape(2,1,1,1),
+            'ky_1': torch.Tensor([[0.2],[0.2]]).reshape(2,1,1,1),
+            }
+
+    obj_conf = torch.Tensor([[1],[1]]).reshape(2,1,1,1)
+
+    nkpt = 2
+
+    loss = handpose.loss.kpt_loss(kpt_truth, kpt_pred, obj_conf, nkpt)
+
+    torch.testing.assert_close(loss, torch.tensor(0.0))
