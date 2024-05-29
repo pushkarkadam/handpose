@@ -166,7 +166,7 @@ def class_loss(classes_truth, classes_pred, obj_conf):
 
     return loss
 
-def kpt_loss(kpt_truth, kpt_pred, obj_conf, nkpt, lambda_kpt=1):
+def kpt_loss(kpt_truth, kpt_pred, obj_conf, lambda_kpt=1):
     r"""Keypoint loss.
 
     Keypoint loss that uses mean square error.
@@ -182,8 +182,6 @@ def kpt_loss(kpt_truth, kpt_pred, obj_conf, nkpt, lambda_kpt=1):
         A dictionary of prediction keypoints
     obj_conf: torch.Tensor
         A torch tensor of size ``(m, 1, S, S)``
-    nkpt: int
-        Number of keypoints.
     lambda_kpt: int, default ``1``
         A multiplier.
 
@@ -204,12 +202,21 @@ def kpt_loss(kpt_truth, kpt_pred, obj_conf, nkpt, lambda_kpt=1):
              'ky_1': torch.Tensor([[0,0,0],[0,0.2,0], [0,0,0]]).reshape(1,1,3,3),
             }
     >>> obj_conf = torch.Tensor([[0,0,0],[0,1,0],[0,0,0]]).reshape(1,1,3,3)
-    >>> nkpt = 2
     >>> loss = kpt_loss(kpt_truth, kpt_pred, obj_conf, nkpt)
     
     """
 
     loss = torch.tensor(0.0)
+
+    nkpt = int(len(list(kpt_truth.keys())) / 2)
+    nkpt_pred = int(len(list(kpt_truth.keys())) / 2)
+
+    try:
+        assert(nkpt == nkpt_pred)
+    except Exception as e:
+        print("\033[91m" + "Mismatch keypoints from truth and prediction.")
+        print("\033[91m"+ f"Truth keypoints {nkpt} != Prediction keypoitns {nkpt_pred}")
+        raise
 
     obj_indicator = obj_conf
     mse = torch.nn.MSELoss(reduction="sum")
@@ -230,7 +237,7 @@ def kpt_loss(kpt_truth, kpt_pred, obj_conf, nkpt, lambda_kpt=1):
 
     return lambda_kpt * loss
 
-def kpt_conf_loss(k_conf_truth, k_conf_pred, obj_conf, nkpt, lambda_kpt_conf=1):
+def kpt_conf_loss(k_conf_truth, k_conf_pred, obj_conf, lambda_kpt_conf=1):
     r"""Calculates the loss of keypoint confidence.
 
     .. math::
@@ -244,8 +251,6 @@ def kpt_conf_loss(k_conf_truth, k_conf_pred, obj_conf, nkpt, lambda_kpt_conf=1):
         A dictionary of prediction keypoint confidence.
     obj_conf: torch.Tensor
         A torch tensor of size ``(m, 1, S, S)``
-    nkpt: int
-        Number of keypoints.
     lambda_kpt_conf: int, default ``1``
         A multiplier.
 
@@ -267,6 +272,16 @@ def kpt_conf_loss(k_conf_truth, k_conf_pred, obj_conf, nkpt, lambda_kpt_conf=1):
 
     """
     loss = torch.tensor(0.0)
+
+    nkpt = int(len(list(k_conf_truth.keys())))
+    nkpt_pred = int(len(list(k_conf_pred.keys())))
+
+    try:
+        assert(nkpt == nkpt_pred)
+    except Exception as e:
+        print("\033[91m" + "Mismatch keypoints from truth and prediction.")
+        print("\033[91m"+ f"Truth keypoints {nkpt} != Prediction keypoitns {nkpt_pred}")
+        raise
 
     obj_indicator = obj_conf
     mse = torch.nn.MSELoss(reduction="sum")
