@@ -44,3 +44,11 @@ Metrics
     :members:
     :undoc-members:
     :show-inheritance:
+
+Loss
+^^^^
+
+.. automodule:: handpose.loss
+    :members:
+    :undoc-members:
+    :show-inheritance:
