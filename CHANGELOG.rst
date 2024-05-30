@@ -31,4 +31,4 @@ Added
 - Best box head selection function based on maximum confidence added.
 - Head extraction function that extracts the bounding box and keypoint coordinates added.
 - Activation functions for prediction head added.
-- Box loss added.
+- Loss function added.
