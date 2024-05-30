@@ -294,3 +294,102 @@ def kpt_conf_loss(k_conf_truth, k_conf_pred, obj_conf, lambda_kpt_conf=1):
         loss += mse(conf_truth, conf_pred)
 
     return lambda_kpt_conf * loss
+
+def loss_fn(truth, prediction, lambda_coord=5, lambda_noobj=0.5, epsilon=1e-6, lambda_kpt=0.5, lambda_kpt_conf=0.5):
+    r"""Computes loss.
+    
+    Parameters
+    ----------
+    truth: dict
+        A dictionary of ground truth.
+    prediction: dict
+        A dictionary of prediction.
+    lambda_coord: float, default ``5``
+        Coordinate multiplier.
+    lambda_noobj: float, default ``0.5``
+        No object multiplier.
+    epsilon: float, default ``1e-6``
+        A term used to add to ``w`` and ``h`` to not make it too small.
+    lambda_kpt: float, default ``0.5``
+        A multiplier keypoint loss.
+    lambda_kpt_conf: float, default ``0.5``
+        A multiplier for confidence loss.
+
+    Returns
+    -------
+    torch.tensor
+
+    Examples
+    --------
+    >>> x = torch.Tensor([[0.5], [0.5]]).reshape(2,1,1,1)
+    >>> y = torch.Tensor([[0.5], [0.5]]).reshape(2,1,1,1)
+    >>> w = torch.Tensor([[0.5], [0.5]]).reshape(2,1,1,1)
+    >>> h = torch.Tensor([[0.5], [0.5]]).reshape(2,1,1,1)
+    >>> kpt_truth = {'kx_0': torch.Tensor([[0.5], [0.5]]).reshape(2,1,1,1),
+                 'ky_0': torch.Tensor([[0.5], [0.5]]).reshape(2,1,1,1),
+                 'kx_1': torch.Tensor([[0.2], [0.2]]).reshape(2,1,1,1),
+                 'ky_1': torch.Tensor([[0.2], [0.2]]).reshape(2,1,1,1),
+                }
+    >>> kpt_conf_truth = {'k_conf_0': torch.Tensor([[1],[1]]).reshape(2,1,1,1),
+                 'k_conf_1': torch.Tensor([[1],[1]]).reshape(2,1,1,1)
+                }
+    >>> conf_truth = torch.Tensor([[1],[1]]).reshape(2,1,1,1)
+    >>> classes_truth = torch.cat([torch.Tensor([[0],[0]]).reshape(2,1,1,1), 
+                               torch.Tensor([[1],[1]]).reshape(2,1,1,1)], dim=1)
+    >>> truth = {'x': x,
+             'y': y,
+             'w': w,
+             'h': h,
+             'conf': conf_truth,
+             'kpt': kpt_truth,
+             'k_conf': kpt_conf_truth,
+             'classes': classes_truth  
+            }
+    >>> prediction = copy.deepcopy(truth)
+    >>> lambda_coord = 5
+    >>> lambda_noobj = 0.5
+    >>> epsilon = 1e-6
+    >>> lambda_kpt = 0.5 
+    >>> lambda_kpt_conf = 0.5
+    >>> loss(truth, prediction, lambda_coord, lambda_noobj, epsilon, lambda_kpt, lambda_kpt_conf)
+    
+    """
+    # Extracting values for box loss
+    box_truth = (truth['x'], truth['y'], truth['w'], truth['h'])
+    box_pred = (prediction['x'], prediction['y'], prediction['w'], prediction['h'])
+
+    # Extracting values for confidence loss
+    conf_truth = truth['conf']
+    conf_pred = prediction['conf']
+
+    # Extracting values for class loss 
+    classes_truth = truth['classes']
+    classes_pred = prediction['classes']
+
+    # Extracting values for keypoint loss
+    kpt_truth = truth['kpt']
+    kpt_pred = prediction['kpt']
+
+    # Extracting values for keypoint confidence
+    kpt_conf_truth = truth['k_conf']
+    kpt_conf_pred = prediction['k_conf']
+
+    # Box loss
+    L_box = box_loss(box_truth=box_truth, box_pred=box_pred, obj_conf=conf_truth, lambda_coord=lambda_coord, epsilon=epsilon)
+    
+    # confidence loss 
+    L_conf = conf_loss(conf_truth=conf_truth, conf_pred=conf_pred, lambda_noobj=lambda_noobj)
+
+    # class loss 
+    L_class = class_loss(classes_truth=classes_truth, classes_pred=classes_pred, obj_conf=conf_truth)
+
+    # keypoint loss
+    L_kpt = kpt_loss(kpt_truth=kpt_truth, kpt_pred=kpt_pred, obj_conf=conf_truth, lambda_kpt=lambda_kpt)
+
+    # keypoint confidence loss 
+    L_kpt_conf = kpt_conf_loss(k_conf_truth=kpt_conf_truth, k_conf_pred=kpt_conf_pred, obj_conf=conf_truth, lambda_kpt_conf=lambda_kpt_conf)
+
+    # Adding all the losses
+    loss = L_box + L_conf + L_class + L_kpt + L_kpt_conf
+
+    return loss

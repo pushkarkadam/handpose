@@ -169,3 +169,94 @@ def test_kpt_conf_loss2():
     loss = handpose.loss.kpt_conf_loss(kpt_truth, kpt_pred, obj_conf)
 
     torch.testing.assert_close(loss, torch.tensor(0.0))
+
+def test_loss1():
+    """Tests loss()"""
+
+    x = torch.Tensor([[0,0,0],[0,0.5,0],[0,0,0]]).reshape(1,1,3,3)
+    y = torch.Tensor([[0,0,0],[0,0.5,0],[0,0,0]]).reshape(1,1,3,3)
+    w = torch.Tensor([[0,0,0],[0,0.5,0],[0,0,0]]).reshape(1,1,3,3)
+    h = torch.Tensor([[0,0,0],[0,0.5,0],[0,0,0]]).reshape(1,1,3,3)
+
+    kpt_truth = {'kx_0': torch.Tensor([[0,0,0],[0,0.5,0], [0,0,0]]).reshape(1,1,3,3),
+                'ky_0': torch.Tensor([[0,0,0],[0,0.5,0], [0,0,0]]).reshape(1,1,3,3),
+                'kx_1': torch.Tensor([[0,0,0],[0,0.2,0], [0,0,0]]).reshape(1,1,3,3),
+                'ky_1': torch.Tensor([[0,0,0],[0,0.2,0], [0,0,0]]).reshape(1,1,3,3),
+                }
+
+    kpt_conf_truth = {'k_conf_0': torch.Tensor([[0,0,0],[0,1,0], [0,0,0]]).reshape(1,1,3,3),
+                'k_conf_1': torch.Tensor([[0,0,0],[0,1,0], [0,0,0]]).reshape(1,1,3,3)
+                }
+
+    conf_truth = torch.Tensor([[0,0,0],[0,1,0],[0,0,0]]).reshape(1,1,3,3)
+
+    classes_truth = torch.cat([torch.Tensor([[0,0,0],[0,0,0],[0,0,0]]).reshape(1,1,3,3), 
+                            torch.Tensor([[0,0,0],[0,1,0],[0,0,0]]).reshape(1,1,3,3)], dim=1)
+
+    truth = {'x': x,
+            'y': y,
+            'w': w,
+            'h': h,
+            'conf': conf_truth,
+            'kpt': kpt_truth,
+            'k_conf': kpt_conf_truth,
+            'classes': classes_truth
+            
+            }
+
+    prediction = copy.deepcopy(truth)
+
+    lambda_coord = 5
+    lambda_noobj = 0.5
+    epsilon = 1e-6
+    lambda_kpt = 0.5 
+    lambda_kpt_conf = 0.5
+
+    loss = handpose.loss.loss_fn(truth, prediction, lambda_coord, lambda_noobj, epsilon, lambda_kpt, lambda_kpt_conf)
+    
+    torch.testing.assert_close(loss, torch.tensor(0.0))
+
+def test_loss2():
+    """Tests loss()"""
+    x = torch.Tensor([[0.5], [0.5]]).reshape(2,1,1,1)
+    y = torch.Tensor([[0.5], [0.5]]).reshape(2,1,1,1)
+    w = torch.Tensor([[0.5], [0.5]]).reshape(2,1,1,1)
+    h = torch.Tensor([[0.5], [0.5]]).reshape(2,1,1,1)
+
+    kpt_truth = {'kx_0': torch.Tensor([[0.5], [0.5]]).reshape(2,1,1,1),
+                'ky_0': torch.Tensor([[0.5], [0.5]]).reshape(2,1,1,1),
+                'kx_1': torch.Tensor([[0.2], [0.2]]).reshape(2,1,1,1),
+                'ky_1': torch.Tensor([[0.2], [0.2]]).reshape(2,1,1,1),
+                }
+
+    kpt_conf_truth = {'k_conf_0': torch.Tensor([[1],[1]]).reshape(2,1,1,1),
+                'k_conf_1': torch.Tensor([[1],[1]]).reshape(2,1,1,1)
+                }
+
+    conf_truth = torch.Tensor([[1],[1]]).reshape(2,1,1,1)
+
+    classes_truth = torch.cat([torch.Tensor([[0],[0]]).reshape(2,1,1,1), 
+                            torch.Tensor([[1],[1]]).reshape(2,1,1,1)], dim=1)
+
+    truth = {'x': x,
+            'y': y,
+            'w': w,
+            'h': h,
+            'conf': conf_truth,
+            'kpt': kpt_truth,
+            'k_conf': kpt_conf_truth,
+            'classes': classes_truth
+            
+            }
+
+    prediction = copy.deepcopy(truth)
+
+    lambda_coord = 5
+    lambda_noobj = 0.5
+    epsilon = 1e-6
+    lambda_kpt = 0.5 
+    lambda_kpt_conf = 0.5
+
+    loss = handpose.loss.loss_fn(truth, prediction, lambda_coord, lambda_noobj, epsilon, lambda_kpt, lambda_kpt_conf)
+
+    torch.testing.assert_close(loss, torch.tensor(0.0))
