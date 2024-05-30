@@ -166,7 +166,7 @@ def class_loss(classes_truth, classes_pred, obj_conf):
 
     return loss
 
-def kpt_loss(kpt_truth, kpt_pred, obj_conf, lambda_kpt=1):
+def kpt_loss(kpt_truth, kpt_pred, obj_conf, lambda_kpt=0.5):
     r"""Keypoint loss.
 
     Keypoint loss that uses mean square error.
@@ -182,7 +182,7 @@ def kpt_loss(kpt_truth, kpt_pred, obj_conf, lambda_kpt=1):
         A dictionary of prediction keypoints
     obj_conf: torch.Tensor
         A torch tensor of size ``(m, 1, S, S)``
-    lambda_kpt: int, default ``1``
+    lambda_kpt: float, default ``0.5``
         A multiplier.
 
     Returns
