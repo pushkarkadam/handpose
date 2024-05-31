@@ -1,6 +1,10 @@
 def optimizer_fn(model, optimizer, **kwargs):
     """Returns an optimizer.
 
+    Select optimizer from different algorithms in `Optimizer`_.
+
+    .. _Optimizer: https://pytorch.org/docs/stable/optim.html#algorithms
+
     Parameters
     ----------
     model: torch.nn.Module
