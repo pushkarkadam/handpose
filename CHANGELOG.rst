@@ -32,3 +32,4 @@ Added
 - Head extraction function that extracts the bounding box and keypoint coordinates added.
 - Activation functions for prediction head added.
 - Loss function added.
+- Optimizer function added.
