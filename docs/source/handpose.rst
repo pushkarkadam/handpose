@@ -52,3 +52,11 @@ Loss
     :members:
     :undoc-members:
     :show-inheritance:
+
+Optimizer
+^^^^^^^^^
+
+.. automodule:: handpose.optimizer
+    :members:
+    :undoc-members:
+    :show-inheritance:
