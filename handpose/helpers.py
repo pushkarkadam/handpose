@@ -209,7 +209,9 @@ def extract_head(best_head):
     
     """
     # Creating a ditionary
-    data = {'x': [],
+    data = {'conf_score': [],
+            'class_idx': [],
+            'x': [],
             'y': [],
             'w': [],
             'h': [],
@@ -219,12 +221,26 @@ def extract_head(best_head):
 
     # Object indices
     obj_indices = best_head['obj_indices']
+
+    # confidence
+    conf = best_head['conf']
+
+    # class index maximum
+    class_conf, class_idx = torch.max(best_head['classes'], dim=1)
+
+    class_idx = class_idx.unsqueeze(1)
+    class_conf = class_conf.unsqueeze(1)
+
+    # confidence score
+    conf_score = best_head['conf'] * class_conf
     
     # Number of keypoints
     nkpt = int(len(best_head['kpt'].keys()) / 2)
 
     for i, indices in enumerate(obj_indices):
         # Empty list to store values
+        image_conf_score = []
+        image_class_idx = []
         image_x = []
         image_y = []
         image_w = []
@@ -234,6 +250,8 @@ def extract_head(best_head):
         
         # Checking if the list of indices is empty
         if not indices.tolist():
+            data['conf_score'].append([])
+            data['class_idx'].append([])
             data['x'].append([])
             data['y'].append([])
             data['w'].append([])
@@ -247,11 +265,17 @@ def extract_head(best_head):
             # Extracting the index
             x, y = c
 
+            # Extracting conf_score
+            image_conf_score.append(conf_score[i,0,x,y])
+
             # Bounding box
             image_x.append(best_head['x'][i,0,x, y])
             image_y.append(best_head['y'][i,0,x, y])
             image_w.append(best_head['w'][i,0,x, y])
             image_h.append(best_head['h'][i,0,x, y])
+
+            # Classes index
+            image_class_idx.append(class_idx[i, 0, x, y])
     
             # Keypoints
             kpt = best_head['kpt']
@@ -265,7 +289,9 @@ def extract_head(best_head):
     
             image_kx.append(temp_kx_list)
             image_ky.append(temp_ky_list)
-    
+
+        data['conf_score'].append(image_conf_score)
+        data['class_idx'].append(image_class_idx)
         data['x'].append(image_x)
         data['y'].append(image_y)
         data['w'].append(image_w)
