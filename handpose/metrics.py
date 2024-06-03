@@ -49,7 +49,7 @@ def intersection_over_union(box1, box2, minimum=1e-6):
     return iou
 
 def non_max_suppression(data, iou_threshold=0.5):
-    """Calculates non maximum suppression from the extracted data.
+    """Calculates non maximum suppression (NMS) from the extracted data.
 
     Parameters
     ----------
