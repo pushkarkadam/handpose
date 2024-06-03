@@ -151,6 +151,8 @@ def test_extract_head():
     data = handpose.helpers.extract_head(best_head)
 
     assert(isinstance(data, dict))
+    assert(isinstance(data['conf_score'], list))
+    assert(isinstance(data['class_idx'], list))
     assert(isinstance(data['x'], list))
     assert(isinstance(data['y'], list))
     assert(isinstance(data['w'], list))
@@ -161,3 +163,72 @@ def test_extract_head():
     assert(data['x'][0] == [])
     assert(data['kx'][0] == [])
     assert(len(data['kx'][1][0]) == 21)
+
+def test_extract_head2():
+    """Tests extract_head()"""
+
+    x = torch.Tensor([[0,0,0],[0,0.5,0],[0,0,0]]).reshape(1,1,3,3)
+    y = torch.Tensor([[0,0,0],[0,0.5,0],[0,0,0]]).reshape(1,1,3,3)
+    w = torch.Tensor([[0,0,0],[0,0.5,0],[0,0,0]]).reshape(1,1,3,3)
+    h = torch.Tensor([[0,0,0],[0,0.5,0],[0,0,0]]).reshape(1,1,3,3)
+
+    kpt_truth = {'kx_0': torch.Tensor([[0,0,0],[0,0.5,0], [0,0,0]]).reshape(1,1,3,3),
+                'ky_0': torch.Tensor([[0,0,0],[0,0.5,0], [0,0,0]]).reshape(1,1,3,3),
+                'kx_1': torch.Tensor([[0,0,0],[0,0.2,0], [0,0,0]]).reshape(1,1,3,3),
+                'ky_1': torch.Tensor([[0,0,0],[0,0.2,0], [0,0,0]]).reshape(1,1,3,3),
+                }
+
+    kpt_conf_truth = {'k_conf_0': torch.Tensor([[0,0,0],[0,1,0], [0,0,0]]).reshape(1,1,3,3),
+                'k_conf_1': torch.Tensor([[0,0,0],[0,1,0], [0,0,0]]).reshape(1,1,3,3)
+                }
+
+    conf_truth = torch.Tensor([[0,0,0],[0,1,0],[0,0,0]]).reshape(1,1,3,3)
+
+    classes_truth = torch.cat([torch.Tensor([[0,0,0],[0,0,0],[0,0,0]]).reshape(1,1,3,3), 
+                            torch.Tensor([[0,0,0],[0,1,0],[0,0,0]]).reshape(1,1,3,3)], dim=1)
+
+    head = {'x': x,
+            'y': y,
+            'w': w,
+            'h': h,
+            'conf': conf_truth,
+            'kpt': kpt_truth,
+            'k_conf': kpt_conf_truth,
+            'classes': classes_truth    
+            }
+
+    best_head = handpose.helpers.best_box(head, iou_threshold=0.8)
+
+    data = handpose.helpers.extract_head(best_head)
+
+    assert(isinstance(data, dict))
+    assert(isinstance(data['conf_score'], list))
+    assert(isinstance(data['class_idx'], list))
+    assert(isinstance(data['x'], list))
+    assert(isinstance(data['y'], list))
+    assert(isinstance(data['w'], list))
+    assert(isinstance(data['h'], list))
+    assert(isinstance(data['kx'], list))
+    assert(isinstance(data['ky'], list))
+
+    # Checking sample size
+    assert(len(data['conf_score']) == 1)
+    assert(len(data['x']) == 1)
+
+    # Checking confidence values 
+    torch.testing.assert_close(data['conf_score'][0][0], torch.tensor(1.0))
+    torch.testing.assert_close(data['class_idx'][0][0], torch.tensor(1))
+    torch.testing.assert_close(data['x'][0][0], torch.tensor(0.5))
+    torch.testing.assert_close(data['y'][0][0], torch.tensor(0.5))
+    torch.testing.assert_close(data['w'][0][0], torch.tensor(0.5))
+    torch.testing.assert_close(data['h'][0][0], torch.tensor(0.5))
+
+    # kx
+    torch.testing.assert_close(data['kx'][0][0][0], torch.tensor(0.5))
+    torch.testing.assert_close(data['kx'][0][0][1], torch.tensor(0.2))
+
+    # ky
+    torch.testing.assert_close(data['ky'][0][0][0], torch.tensor(0.5))
+    torch.testing.assert_close(data['ky'][0][0][1], torch.tensor(0.2))
+
+
