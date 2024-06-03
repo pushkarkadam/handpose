@@ -55,13 +55,43 @@ def non_max_suppression(data, iou_threshold=0.5):
     ----------
     data: dict
         A dictionary of keys ``['conf_score', 'class_idx', 'x', 'y', 'w', 'h', 'kx', 'ky']`` from
-        :func:`handpose.helpers.extract_head``.
+        :func:`handpose.helpers.extract_head`.
     iou_threshold: float, default ``0.5``
         IoU threshold for NMS algorihtm.
 
     Returns
     -------
     dict
+
+    Examples
+    --------
+    >>> x = torch.Tensor([[0,0,0],[0,0.5,0],[0,0,0]]).reshape(1,1,3,3)
+    >>> y = torch.Tensor([[0,0,0],[0,0.5,0],[0,0,0]]).reshape(1,1,3,3)
+    >>> w = torch.Tensor([[0,0,0],[0,0.5,0],[0,0,0]]).reshape(1,1,3,3)
+    >>> h = torch.Tensor([[0,0,0],[0,0.5,0],[0,0,0]]).reshape(1,1,3,3)
+    >>> kpt_truth = {'kx_0': torch.Tensor([[0,0,0],[0,0.5,0], [0,0,0]]).reshape(1,1,3,3),
+                'ky_0': torch.Tensor([[0,0,0],[0,0.5,0], [0,0,0]]).reshape(1,1,3,3),
+                'kx_1': torch.Tensor([[0,0,0],[0,0.2,0], [0,0,0]]).reshape(1,1,3,3),
+                'ky_1': torch.Tensor([[0,0,0],[0,0.2,0], [0,0,0]]).reshape(1,1,3,3),
+                }
+    >>> kpt_conf_truth = {'k_conf_0': torch.Tensor([[0,0,0],[0,1,0], [0,0,0]]).reshape(1,1,3,3),
+                'k_conf_1': torch.Tensor([[0,0,0],[0,1,0], [0,0,0]]).reshape(1,1,3,3)
+                }
+    >>> conf_truth = torch.Tensor([[0,0,0],[0,1,0],[0,0,0]]).reshape(1,1,3,3)
+    >>> classes_truth = torch.cat([torch.Tensor([[0,0,0],[0,0,0],[0,0,0]]).reshape(1,1,3,3), 
+                            torch.Tensor([[0,0,0],[0,1,0],[0,0,0]]).reshape(1,1,3,3)], dim=1)
+    >>> head = {'x': x,
+            'y': y,
+            'w': w,
+            'h': h,
+            'conf': conf_truth,
+            'kpt': kpt_truth,
+            'k_conf': kpt_conf_truth,
+            'classes': classes_truth    
+            }
+    >>> best_head = handpose.helpers.best_box(head, iou_threshold=0.8)
+    >>> head_data = handpose.helpers.extract_head(best_head)
+    >>> nms_boxes = handpose.metrics.non_max_suppression(head_data, iou_threshold=0.5)
     
     """
     m = len(data['conf_score'])
