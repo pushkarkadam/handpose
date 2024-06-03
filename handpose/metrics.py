@@ -1,4 +1,6 @@
 import torch 
+from handpose.helpers import *
+import torchvision
 
 
 def intersection_over_union(box1, box2, minimum=1e-6):
@@ -45,3 +47,76 @@ def intersection_over_union(box1, box2, minimum=1e-6):
     iou = Ai / (A1 + A2 - Ai + minimum)
 
     return iou
+
+def non_max_suppression(data, iou_threshold=0.5):
+    """Calculates non maximum suppression from the extracted data.
+
+    Parameters
+    ----------
+    data: dict
+        A dictionary of keys ``['conf_score', 'class_idx', 'x', 'y', 'w', 'h', 'kx', 'ky']`` from
+        :func:`handpose.helpers.extract_head``.
+    iou_threshold: float, default ``0.5``
+        IoU threshold for NMS algorihtm.
+
+    Returns
+    -------
+    dict
+    
+    """
+    m = len(data['conf_score'])
+    
+    nms_box_indices = []
+    keep_boxes = []
+    kx = []
+    ky = []
+    
+    for i in range(m):
+        n = len(data['conf_score'][i])
+        boxes = []
+        scores = []
+        kx_i = []
+        ky_i = []
+        if n:
+            for j in range(n):
+                score = data['conf_score'][i][j]
+                scores.append(score)
+                
+                x = data['x'][i][j]
+                y = data['y'][i][j]
+                w = data['w'][i][j]
+                h = data['h'][i][j]
+
+                kx_ = torch.Tensor(data['kx'][i][j])
+                ky_ = torch.Tensor(data['ky'][i][j])
+
+                kpt = kx_.shape[0]
+
+                # Converting xywh to xyxy format
+                xmin, ymin, xmax, ymax = xywh_to_xyxy(x, y, w, h)
+                box = torch.Tensor([xmin, ymin, xmax, ymax])
+                boxes.append(box)
+                kx_i.append(torch.Tensor(kx_))
+                ky_i.append(torch.Tensor(ky_))
+                
+            scores = torch.Tensor(scores).reshape(n)
+            boxes = torch.cat(boxes, dim=0).reshape(n,4)
+            kx_nms = torch.cat(kx_i, dim=0).reshape(n,kpt)
+            ky_nms = torch.cat(ky_i, dim=0).reshape(n,kpt)
+            
+            nms_index = torchvision.ops.nms(boxes, scores, iou_threshold)
+            nms_box_indices.append(nms_index)
+            keep_boxes.append(boxes[nms_index])
+            
+            kx.append(kx_nms[nms_index])
+            ky.append(ky_nms[nms_index])
+            
+        else:
+            nms_box_indices.append([])
+            keep_boxes.append([])
+    
+    return {"nms_box_indices": nms_box_indices,
+            "boxes": keep_boxes,
+            "kx": kx,
+            "ky": ky
+           }

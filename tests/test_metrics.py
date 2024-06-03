@@ -57,3 +57,47 @@ def test_intersection_over_union2():
     assert(iou.shape == (m, 1, S, S))
     torch.testing.assert_close(torch.max(iou), torch.tensor(0.5357), rtol=1e-4, atol=1e-4)
     torch.testing.assert_close(torch.min(iou), torch.tensor(0.5357), rtol=1e-4, atol=1e-4)
+
+def test_non_max_suppression():
+    """Tests non_max_suppression"""
+
+    x = torch.Tensor([[0,0,0],[0,0.5,0],[0,0,0]]).reshape(1,1,3,3)
+    y = torch.Tensor([[0,0,0],[0,0.5,0],[0,0,0]]).reshape(1,1,3,3)
+    w = torch.Tensor([[0,0,0],[0,0.5,0],[0,0,0]]).reshape(1,1,3,3)
+    h = torch.Tensor([[0,0,0],[0,0.5,0],[0,0,0]]).reshape(1,1,3,3)
+
+    kpt_truth = {'kx_0': torch.Tensor([[0,0,0],[0,0.5,0], [0,0,0]]).reshape(1,1,3,3),
+                'ky_0': torch.Tensor([[0,0,0],[0,0.5,0], [0,0,0]]).reshape(1,1,3,3),
+                'kx_1': torch.Tensor([[0,0,0],[0,0.2,0], [0,0,0]]).reshape(1,1,3,3),
+                'ky_1': torch.Tensor([[0,0,0],[0,0.2,0], [0,0,0]]).reshape(1,1,3,3),
+                }
+
+    kpt_conf_truth = {'k_conf_0': torch.Tensor([[0,0,0],[0,1,0], [0,0,0]]).reshape(1,1,3,3),
+                'k_conf_1': torch.Tensor([[0,0,0],[0,1,0], [0,0,0]]).reshape(1,1,3,3)
+                }
+
+    conf_truth = torch.Tensor([[0,0,0],[0,1,0],[0,0,0]]).reshape(1,1,3,3)
+
+    classes_truth = torch.cat([torch.Tensor([[0,0,0],[0,0,0],[0,0,0]]).reshape(1,1,3,3), 
+                            torch.Tensor([[0,0,0],[0,1,0],[0,0,0]]).reshape(1,1,3,3)], dim=1)
+
+    head = {'x': x,
+            'y': y,
+            'w': w,
+            'h': h,
+            'conf': conf_truth,
+            'kpt': kpt_truth,
+            'k_conf': kpt_conf_truth,
+            'classes': classes_truth    
+            }
+
+    best_head = handpose.helpers.best_box(head, iou_threshold=0.8)
+
+    head_data = handpose.helpers.extract_head(best_head)
+
+    nms_boxes = handpose.metrics.non_max_suppression(head_data, iou_threshold=0.5)
+
+    assert isinstance(nms_boxes['nms_box_indices'], list)
+
+    torch.testing.assert_close(nms_boxes['nms_box_indices'][0], torch.Tensor([0]).type(torch.int64))
+    torch.testing.assert_close(nms_boxes['boxes'][0], torch.Tensor([[0.25, 0.25, 0.75, 0.75]]))
