@@ -172,7 +172,7 @@ def best_box(head, iou_threshold=0.5):
 
     return best_head
 
-def extract_head(best_head):
+def extract_head(best_head, cell_relative=True):
     """Extracts head data based on the indices
 
     The return dictionary contains a list of values for each image.
@@ -185,6 +185,8 @@ def extract_head(best_head):
     ----------
     best_head: dict
         A dictionary with the keys ``['conf', 'classes', 'x', 'y', 'w', 'h', 'k_conf', 'kpt', 'obj_indices']``.
+    cell_relative: bool, default ``True``
+        A boolean that checks if the ground truth bounding box centers were cell relative.
 
     Returns
     -------
@@ -221,6 +223,9 @@ def extract_head(best_head):
 
     # Object indices
     obj_indices = best_head['obj_indices']
+
+    # Grid size
+    m, _, S, _ = best_head['conf'].shape
 
     # confidence
     conf = best_head['conf']
@@ -269,8 +274,14 @@ def extract_head(best_head):
             image_conf_score.append(conf_score[i,0,x,y])
 
             # Bounding box
-            image_x.append(best_head['x'][i,0,x, y])
-            image_y.append(best_head['y'][i,0,x, y])
+            if cell_relative:
+                x_img = (best_head['x'][i, 0, x, y] + x) / S
+                y_img = (best_head['y'][i, 0, x, y] + y) / S
+                image_x.append(x_img)
+                image_y.append(y_img)
+            else:
+                image_x.append(best_head['x'][i,0,x, y])
+                image_y.append(best_head['y'][i,0,x, y])
             image_w.append(best_head['w'][i,0,x, y])
             image_h.append(best_head['h'][i,0,x, y])
 
