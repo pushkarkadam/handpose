@@ -8,3 +8,4 @@ tqdm
 sphinx
 pytest
 torchsummary
+scikit-learn

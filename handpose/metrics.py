@@ -1,6 +1,7 @@
 import torch 
 from handpose.helpers import *
 import torchvision
+from torchvision.ops import box_iou
 
 
 def intersection_over_union(box1, box2, minimum=1e-6):
@@ -150,3 +151,110 @@ def non_max_suppression(data, iou_threshold=0.5):
             "kx": kx,
             "ky": ky
            }
+
+def mean_average_precision(pred, truth, iou_threshold=0.5, num_classes=1):
+    """
+    Calculate Mean Average Precision (mAP) and confusion matrix for object detection.
+
+    Parameters
+    ----------
+    pred: dict
+        A dictionary of prediction with keys ``['conf_score', 'labels', 'boxes']``
+    truth: dict
+        A dictionary of truth with keys ``['conf_score', 'labels', 'boxes']``
+    iou_threshold : float, default=0.5
+        IoU threshold to consider a prediction as true positive.
+    num_classes : int, default=1
+        Number of object classes.
+
+    Returns
+    -------
+    dict
+        Dictionary containing mAP and confusion matrix.
+    """
+    pred_boxes = pred['boxes']
+    pred_scores = pred['conf_score']
+    pred_labels = pred['labels']
+    true_boxes = truth['boxes']
+    true_labels = truth['labels']
+    
+    average_precisions = []
+    confusion_matrix = torch.zeros((num_classes, num_classes), dtype=torch.int32)
+
+    for c in range(num_classes):
+        true_positives = []
+        false_positives = []
+        num_true_objects = 0
+
+        for pred_box, pred_score, pred_label, true_box, true_label in zip(pred_boxes, pred_scores, pred_labels, true_boxes, true_labels):
+            if len(pred_box) == 0:
+                continue
+
+            # Convert list of tensors to a single tensor
+            pred_label = torch.tensor([label.item() for label in pred_label])
+            true_label = torch.tensor([label.item() for label in true_label])
+
+            num_true_objects += (true_label == c).sum().item()
+            detected = []
+
+            for i, box in enumerate(pred_box):
+                if pred_label[i] != c:
+                    continue
+
+                if true_box.numel() == 0:
+                    false_positives.append(1)
+                    true_positives.append(0)
+                    continue
+                
+                ious = box_iou(box.unsqueeze(0), true_box)
+                max_iou, max_index = ious.max(1)
+
+                if max_iou >= iou_threshold and max_index not in detected and true_label[max_index] == c:
+                    true_positives.append(1)
+                    false_positives.append(0)
+                    detected.append(max_index)
+                else:
+                    false_positives.append(0)
+                    true_positives.append(0)
+
+            # Update confusion matrix
+            for i, box in enumerate(pred_box):
+                pred_class = pred_label[i].item()
+                if pred_class != c:
+                    continue
+                if i in detected:
+                    confusion_matrix[c, c] += 1
+                else:
+                    if len(true_label) > 0:
+                        true_class = true_label[max_index].item()
+                        confusion_matrix[true_class, pred_class] += 1
+                    else:
+                        confusion_matrix[0, pred_class] += 1
+
+        if len(true_positives) == 0:
+            average_precisions.append(0)
+            continue
+
+        true_positives = torch.tensor(true_positives)
+        false_positives = torch.tensor(false_positives)
+
+        true_positives = torch.cumsum(true_positives, dim=0)
+        false_positives = torch.cumsum(false_positives, dim=0)
+
+        precisions = true_positives / (true_positives + false_positives + 1e-16)
+        recalls = true_positives / (num_true_objects + 1e-16)
+
+        precisions = torch.cat((torch.tensor([0]), precisions))
+        recalls = torch.cat((torch.tensor([0]), recalls))
+
+        for i in range(len(precisions) - 1, 0, -1):
+            precisions[i - 1] = torch.max(precisions[i - 1], precisions[i])
+
+        indices = torch.where(recalls[1:] != recalls[:-1])[0]
+        average_precision = torch.sum((recalls[indices + 1] - recalls[indices]) * precisions[indices + 1])
+        average_precisions.append(average_precision.item())
+
+    return {
+        'mAP': sum(average_precisions) / num_classes,
+        'confusion_matrix': confusion_matrix
+    }

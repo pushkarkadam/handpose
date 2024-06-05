@@ -101,3 +101,128 @@ def test_non_max_suppression():
 
     torch.testing.assert_close(nms_boxes['nms_box_indices'][0], torch.Tensor([0]).type(torch.int64))
     torch.testing.assert_close(nms_boxes['boxes'][0], torch.Tensor([[0.25, 0.25, 0.75, 0.75]]))
+
+def test_mean_average_precision1():
+    """Tests mean_average_precision()"""
+
+    truth_boxes = [
+        torch.tensor([[0.25, 0.25, 0.75, 0.75]], dtype=torch.float32),
+        torch.tensor([[0.25, 0.25, 0.75, 0.75]], dtype=torch.float32)
+    ]
+
+    truth_labels = [
+        [torch.tensor(0)],
+        [torch.tensor(1)]
+    ]
+
+    truth = {'boxes': truth_boxes,
+            'labels': truth_labels
+            }
+
+    pred_boxes = [
+        torch.tensor([[0.25, 0.25, 0.75, 0.75]], dtype=torch.float32),
+        []
+    ]
+
+    pred_score = [
+        [torch.tensor(0.8)],
+        []
+    ]
+
+    pred_labels = [
+        [torch.tensor(0)],
+        []
+    ]
+
+    pred = {'conf_score': pred_score,
+            'labels': pred_labels,
+            'boxes': pred_boxes
+        }
+
+    result = handpose.metrics.mean_average_precision(pred, truth, iou_threshold=0.5, num_classes=2)
+
+    assert(result['mAP'] == 0.5)
+    torch.testing.assert_close(result['confusion_matrix'], torch.tensor([[1,0],[0,0]], dtype=torch.int32))
+
+def test_mean_average_precision2():
+    """Tests mean_average_precision()"""
+
+    truth_boxes = [
+        torch.tensor([[0.25, 0.25, 0.75, 0.75]], dtype=torch.float32),
+        torch.tensor([[0.25, 0.25, 0.75, 0.75]], dtype=torch.float32)
+    ]
+
+    truth_labels = [
+        [torch.tensor(0)],
+        [torch.tensor(1)]
+    ]
+
+    truth = {'boxes': truth_boxes,
+            'labels': truth_labels
+            }
+
+    pred_boxes = [
+        torch.tensor([[0.25, 0.25, 0.75, 0.75]], dtype=torch.float32),
+        []
+    ]
+
+    pred_score = [
+        [torch.tensor(0.8)],
+        []
+    ]
+
+    pred_labels = [
+        [torch.tensor(1)],
+        []
+    ]
+
+    pred = {'conf_score': pred_score,
+            'labels': pred_labels,
+            'boxes': pred_boxes
+        }
+
+    result = handpose.metrics.mean_average_precision(pred, truth, iou_threshold=0.5, num_classes=2)
+
+    assert(result['mAP'] == 0.0)
+    torch.testing.assert_close(result['confusion_matrix'], torch.tensor([[0,1],[0,0]], dtype=torch.int32))
+
+def test_mean_average_precision3():
+    """Tests mean_average_precision()"""
+    truth_boxes = [
+        torch.tensor([[0.25, 0.25, 0.75, 0.75]], dtype=torch.float32),
+        torch.tensor([[0.25, 0.25, 0.75, 0.75]], dtype=torch.float32)
+    ]
+
+    truth_labels = [
+        [torch.tensor(0)],
+        [torch.tensor(1)]
+    ]
+
+    truth = {'boxes': truth_boxes,
+            'labels': truth_labels
+            }
+
+    pred_boxes = [
+        torch.tensor([[0.25, 0.25, 0.75, 0.75], [0.25, 0.25, 0.75, 0.75]], dtype=torch.float32),
+        []
+    ]
+
+    pred_score = [
+        [torch.tensor(0.8), torch.tensor(0.4)],
+        []
+    ]
+
+    pred_labels = [
+        [torch.tensor(0), torch.tensor(1)],
+        []
+    ]
+
+    pred = {'conf_score': pred_score,
+            'labels': pred_labels,
+            'boxes': pred_boxes
+        }
+
+    result = handpose.metrics.mean_average_precision(pred, truth, iou_threshold=0.5, num_classes=2)
+
+    assert(result['mAP'] == 0.5)
+    torch.testing.assert_close(result['confusion_matrix'], torch.tensor([[1,1],[0,0]], dtype=torch.int32))
