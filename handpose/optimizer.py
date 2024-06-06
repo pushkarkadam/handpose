@@ -3,11 +3,16 @@ import warnings
 
 
 def optimizer_fn(model, optimizer, **kwargs):
-    """Returns an optimizer.
+    r"""Returns an optimizer.
 
     Select optimizer from different algorithms in `Optimizer`_.
 
     .. _Optimizer: https://pytorch.org/docs/stable/optim.html#algorithms
+
+    .. deprecated::
+        You can now use
+        :func:`handpose.metric.Optimizer`
+        for creating an optimizer.
 
     Parameters
     ----------
