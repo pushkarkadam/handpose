@@ -33,4 +33,5 @@ Added
 - Activation functions for prediction head added.
 - Loss function added.
 - Optimizer function added.
-- Non-Max suppression (NMS) function added
+- Non-Max suppression (NMS) function added.
+- Mean average precision calculation added.
