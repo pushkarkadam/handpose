@@ -296,7 +296,16 @@ def kpt_conf_loss(k_conf_truth, k_conf_pred, obj_conf, lambda_kpt_conf=1):
     return lambda_kpt_conf * loss
 
 def loss_fn(truth, prediction, lambda_coord=5, lambda_noobj=0.5, epsilon=1e-6, lambda_kpt=0.5, lambda_kpt_conf=0.5):
-    r"""Computes loss.
+    r"""Computes loss and returns a dictionary of all the losses.
+
+    The losses returned are:
+    
+    - Total Loss
+    - Box Loss
+    - Class Loss
+    - Keypoint Loss
+    - Keypoint Confidence Loss
+
     
     Parameters
     ----------
@@ -317,7 +326,7 @@ def loss_fn(truth, prediction, lambda_coord=5, lambda_noobj=0.5, epsilon=1e-6, l
 
     Returns
     -------
-    torch.tensor
+    dict
 
     Examples
     --------
