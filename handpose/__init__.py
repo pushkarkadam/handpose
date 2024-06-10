@@ -5,4 +5,5 @@ from .network import *
 from .metrics import *
 from .loss import *
 from .optimizer import *
+from .plots import *
 from .train import *

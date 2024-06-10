@@ -5,6 +5,7 @@ import os
 from tqdm import tqdm 
 import torch.optim as optim
 from torch.optim import lr_scheduler
+import pickle
 
 sys.path.append('../')
 from handpose import *
@@ -21,11 +22,11 @@ def train_model(dataloaders,
                 nc=2,
                 require_kpt_conf=True,
                 iou_threshold=0.5,
-                lambda_coord = 5,
-                lambda_noobj = 0.5,
-                epsilon = 1e-6,
-                lambda_kpt = 0.5,
-                lambda_kpt_conf = 0.5,
+                lambda_coord=5,
+                lambda_noobj=0.5,
+                epsilon=1e-6,
+                lambda_kpt=0.5,
+                lambda_kpt_conf=0.5,
                 verbose=True,
                 save_model_path='../data/runs',
                 train_dir='train',
@@ -247,5 +248,19 @@ def train_model(dataloaders,
     history = {'model': model,
                'all_losses': all_losses
               }
+
+    plot_history = dict()
+
+    for p in ['train', 'valid']:
+        plot_history[p] = dict()
+        for k, v in history['all_losses'][p].items():
+            plot_history[p][k] = [float(i) for i in v]
+
+    if save_model_path:
+        loss_history = plot_history
+
+        plot_loss_history(loss_history, root_path=train_path)
+
+        all_loss_history(loss_history, root_path=train_path)
 
     return history
