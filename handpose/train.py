@@ -14,11 +14,11 @@ def train_model(dataloaders,
                 dataset_sizes,
                 model,
                 loss_fn,   
-                num_epochs,
-                S,
-                B,
-                nkpt,
-                nc,
+                num_epochs=100,
+                S=7,
+                B=2,
+                nkpt=21,
+                nc=2,
                 require_kpt_conf=True,
                 iou_threshold=0.5,
                 lambda_coord = 5,
@@ -34,7 +34,70 @@ def train_model(dataloaders,
                 lr_momentum=0.9,
                 scheduler='default'
                ):
-    """Training function."""
+    r"""Training function.
+    
+    Parameters
+    ----------
+    dataloaders: dict
+        A dictionary of ``train`` and ``valid`` dataloaders.
+    dataset_size: dict
+        A dictionary of number of images in the dataset.
+    model: torch.nn.Module
+        A CNN model.
+    loss_fn: function
+        Loss function from
+        :func:`handpose.loss.loss_fn`
+    num_epochs: int, default ``100``
+        Number of epochs.
+    S: int, default ``7``
+        Grid size.
+    B: int, default ``2``
+    nkpt: int, default ``21``
+        Number of keypoints.
+    nc: int, default ``2``
+        Number of classes.
+    require_kpt_conf: bool, default ``True``
+        Boolean flag to select keypoint confidence.
+    iou_threshold: float, default ``0.5``
+        IOU threshold.
+    lambda_coord: float, default ``5.0``
+        A multiplier for coordinates.
+    lambda_noobj: float, default ``0.5``
+        A multiplier for no object detection.
+    epsilon: float, default ``1e-6``
+        Epsilon value to avoid ``nan`` output.
+    lambda_kpt: float, default ``0.5``
+        A multiplier for keypoint.
+    lambda_kpt_conf: float, default ``0.5``
+        A multipler for keypoint confident.
+    verbose: bool, default ``True``
+        Prints statements.
+    save_model_path: str, default ``'../data/runs'``
+        Path to save the model.
+    train_dir: str, default``'train'``
+        Directory to name for training.
+    optimizer: str, default ``'default'``
+        Optimizer
+        Use from ``torch.optim`` or 
+        :func:`handpose.optimizer.Optimizer`
+    learning_rate: float, default ``0.01``
+        Learning rate for optimizer.
+    lr_momentum: float, default ``0.9``
+        Learning rate momentum.
+    scheduler: str, default ``'default'``
+        Scheduler for learning.
+        If using default, then
+        :func:`handpose.optimizer.Scheduler`
+        is used.
+        Otherwise, use `torch.optim` scheduler and directly pass
+        it as a parameter.
+
+    Returns
+    -------
+    dict
+        A dictionary of trained model and losses.
+    
+    """
 
     # Record start time
     since = time.time()
