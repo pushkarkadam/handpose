@@ -136,6 +136,11 @@ class Scheduler(torch.nn.Module):
     lr_scheduler: torch.optim
         A scheduler type.
     
+    Examples
+    --------
+    >>> model = Model()
+    >>> optimizer = optim.SGD(model.parameters(), lr=0.1, momentum=0.9)
+    >>> scheduler = handpose.optimizer.Scheduler(optimizer, lr_scheduler.MultiStepLR, **{'milestones': [30, 80], 'gamma':0.1}).scheduler
     
     """
     def __init__(self, optimizer, lr_scheduler, **kwargs):
