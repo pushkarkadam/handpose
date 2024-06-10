@@ -21,7 +21,8 @@ author = 'Pushkar Kadam'
 
 extensions = ['sphinx.ext.autodoc', 
 'sphinx.ext.napoleon',
-'sphinx.ext.viewcode' 
+'sphinx.ext.viewcode',
+'sphinxcontrib.mermaid' 
 ]
 
 templates_path = ['_templates']
