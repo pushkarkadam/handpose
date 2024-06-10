@@ -111,3 +111,36 @@ class Optimizer(torch.nn.Module):
         
         # Initialize the optimizer with the filtered parameters
         self.optimizer = optimizer_cls(params, **kwargs)
+
+class Scheduler(torch.nn.Module):
+    """A wrapper class for scheduler.
+    
+    This class simplifies the creation of a scheduler while giving the flexibility
+    of using different types of scheduler mentioned in torch `Scheduler`_.
+
+    .. _Scheduler: https://pytorch.org/docs/stable/optim.html#how-to-adjust-learning-rate
+
+    Parameters
+    ----------
+    optimizer: torch.optim
+        Optimizer class.
+    lr_scheduler: torch.optim
+        A scheduler type.
+    **kwargs: dict
+        Additional keywork arguments to be passed to the scheduler.
+
+    Attributes
+    ----------
+    optimizer: torch.optim
+        Optimizer class.
+    lr_scheduler: torch.optim
+        A scheduler type.
+    
+    
+    """
+    def __init__(self, optimizer, lr_scheduler, **kwargs):
+        super().__init__()
+        self.optimizer = optimizer
+        self.lr_scheduler = lr_scheduler
+
+        self.scheduler = self.lr_scheduler(self.optimizer, **kwargs)

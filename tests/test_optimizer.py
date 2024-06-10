@@ -3,6 +3,8 @@ import os
 import pytest 
 import torch
 import torch.optim as optim
+from torch.optim import lr_scheduler
+import collections
 
 sys.path.append('../')
 
@@ -163,3 +165,23 @@ def test_optimizer_step():
     for param in model.parameters():
         if param.grad is not None:
             assert torch.any(param.grad != 0)
+
+def test_scheduler1():
+    """Test for scheduler"""
+    model = SimpleModel()
+    optimizer = optim.SGD(model.parameters(), lr=0.1, momentum=0.9)
+    scheduler = handpose.optimizer.Scheduler(optimizer, lr_scheduler.StepLR, **{'step_size': 7, 'gamma':0.1}).scheduler
+
+    assert(isinstance(scheduler, torch.optim.lr_scheduler.StepLR))
+    assert(scheduler.state_dict()['step_size'] == 7)
+    assert(scheduler.state_dict()['gamma'] == 0.1)
+
+def test_scheduler1():
+    """Test for scheduler"""
+    model = SimpleModel()
+    optimizer = optim.SGD(model.parameters(), lr=0.1, momentum=0.9)
+    scheduler = handpose.optimizer.Scheduler(optimizer, lr_scheduler.MultiStepLR, **{'milestones': [30, 80], 'gamma':0.1}).scheduler
+
+    assert(isinstance(scheduler, torch.optim.lr_scheduler.MultiStepLR))
+    assert(isinstance(scheduler.state_dict()['milestones'], collections.Counter))
+    assert(scheduler.state_dict()['gamma'] == 0.1)
