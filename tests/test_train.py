@@ -68,7 +68,6 @@ def test_train_model():
     lambda_kpt = 0.5 
     lambda_kpt_conf = 0.5
 
-
     history = train_model(dataloaders,
                     dataset_sizes,
                     model,
