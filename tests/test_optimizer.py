@@ -176,7 +176,7 @@ def test_scheduler1():
     assert(scheduler.state_dict()['step_size'] == 7)
     assert(scheduler.state_dict()['gamma'] == 0.1)
 
-def test_scheduler1():
+def test_scheduler2():
     """Test for scheduler"""
     model = SimpleModel()
     optimizer = optim.SGD(model.parameters(), lr=0.1, momentum=0.9)
