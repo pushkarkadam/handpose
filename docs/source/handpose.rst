@@ -68,3 +68,10 @@ Train
     :members:
     :undoc-members:
     :show-inheritance:
+
+Plots
+^^^^^
+.. automodule:: handpose.plots 
+    :members:
+    :undoc-members:
+    :show-inheritance:
