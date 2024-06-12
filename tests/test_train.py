@@ -88,6 +88,7 @@ def test_train_model1():
     
     assert(isinstance(history, dict))
     assert(isinstance(history['all_losses'], dict))
+    assert(len(history['all_losses']['train']['total_loss']) == num_epochs)
 
     # Deleting variables to free memory for the next test
     del history
@@ -148,7 +149,7 @@ def test_train_model2():
         freeze_weights=freeze_weights
     )
 
-    num_epochs = 1
+    num_epochs = 2
     iou_threshold = 0.5
     lambda_coord = 5
     lambda_noobj = 0.5
@@ -176,6 +177,7 @@ def test_train_model2():
     
     assert(isinstance(history, dict))
     assert(isinstance(history['all_losses'], dict))
+    assert(len(history['all_losses']['train']['total_loss']) == num_epochs)
 
     # Deleting variables to free memory for the next test
     del history

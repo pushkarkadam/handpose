@@ -103,6 +103,8 @@ def train_model(dataloaders,
     # Record start time
     since = time.time()
 
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
     if save_model_path:
         timestamp = str(int(since))
         train_dir = train_dir + '_' + timestamp
@@ -122,12 +124,16 @@ def train_model(dataloaders,
               "kpt_conf_loss": []
              }
 
-    all_losses = {'train': losses, 'valid': losses}
+    valid_losses = copy.deepcopy(losses)
+
+    all_losses = {'train': losses, 'valid': valid_losses}
     
     eval_metrics = dict()
-    
-    running_loss = 0.0
 
+    # Storing epoch mAP values
+    epochs_mAP = {'train': [], 'valid': []}
+
+    # Checking if the optimizer is default
     if optimizer == 'default':
         if verbose:
             print(f'Using default SGD optimizer with learning rate={learning_rate}, momentum={lr_momentum}')
@@ -138,17 +144,24 @@ def train_model(dataloaders,
             print('Using default scheduler with step_size=7 and gamma=0.1')
         scheduler = Scheduler(optimizer, lr_scheduler.StepLR ,**{'step_size': 7, 'gamma': 0.1}).scheduler
         
-    
+    # Epochs
     for epoch in tqdm(range(num_epochs), unit='batch', total=num_epochs):
         if verbose:
             print(f'Epoch: {epoch + 1}')
         for phase in ['train', 'valid']:
+
+            # Running losses
+            running_losses = dict()
+            for k in losses:
+                running_losses[k] = 0.0
+        
+            # Running corrects
+            mAP = 0.0
+            
             if phase == 'train':
                 model.train() # Set model to training mode
             else:
                 model.eval()
-    
-            device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     
             for i, train_data in enumerate(dataloaders[phase], start=0):
                 images = train_data[0].to(device)
@@ -186,48 +199,54 @@ def train_model(dataloaders,
                     best_pred_head = best_box(pred_head_act, iou_threshold=iou_threshold)
     
                     phase_losses = loss_fn(data, best_pred_head, lambda_coord, lambda_noobj, epsilon, lambda_kpt, lambda_kpt_conf)
-    
+
                     loss = phase_losses['total_loss']
-                    
-                    for k, v in phase_losses.items():
-                        all_losses[phase][k].append(v)
     
                     # backward + optimize only if in training phase
                     if phase == 'train':
                         loss.backward()
                         optimizer.step()
     
-                    if phase == 'valid':
-                        truth_data = extract_head(data)
-                        truth_data_nms = non_max_suppression(truth_data)
-                        pred_data = extract_head(best_pred_head)
-                        pred_data_nms = non_max_suppression(pred_data)
-    
-                        pred_map = {'conf_score': pred_data['conf_score'],
-                                    'labels': pred_data['class_idx'],
-                                    'boxes': pred_data_nms['boxes']
-                                   }
-                        truth_map = {'boxes': pred_data_nms['boxes'],
-                                     'labels': truth_data['class_idx']
-                                    }
-                        eval_metric = mean_average_precision(pred_map, truth_map, iou_threshold, num_classes=nc)
-                        if verbose:
-                            print(f'mAP: {eval_metric["mAP"]}')
-                        eval_metrics[epoch] = eval_metric
-    
-                running_loss += loss.item() * images.size(0)
+                    # if phase == 'valid':
+                        # import pdb;pdb.set_trace()
+                    truth_data = extract_head(data)
+                    truth_data_nms = non_max_suppression(truth_data)
+                    pred_data = extract_head(best_pred_head)
+                    pred_data_nms = non_max_suppression(pred_data)
+
+                    # import pdb;pdb.set_trace()
+
+                    pred_map = {'conf_score': pred_data['conf_score'],
+                                'labels': pred_data['class_idx'],
+                                'boxes': pred_data_nms['boxes']
+                               }
+                    truth_map = {'boxes': truth_data_nms['boxes'],
+                                 'labels': truth_data['class_idx']
+                                }
+
+                    # Evaluation metric
+                    eval_metric = mean_average_precision(pred_map, truth_map, iou_threshold, num_classes=nc)
+
+                for k in running_losses:
+                    running_losses[k] += phase_losses[k].item() * current_batch_size
+
+                mAP += eval_metric['mAP'] 
 
             if phase == 'train':
                 scheduler.step()
+ 
+            for k, v in running_losses.items():
+                epoch_loss = v / dataset_sizes[phase]
+                all_losses[phase][k].append(epoch_loss)
 
-            epoch_loss = running_loss / dataset_sizes[phase]
-            
+            mAP_epoch = mAP / dataset_sizes[phase]
+            epochs_mAP[phase].append(mAP_epoch)
+
             if verbose:
                 print(f'{phase}')
                 print('-' * len(str(phase)))
-                for k,v in phase_losses.items():
+                for k,v in running_losses.items():
                     print(f'{k}: {v:.3f}')
-                    all_losses[phase][k].append(float(v))
                 print("\n")
 
             if save_model_path:
@@ -246,7 +265,8 @@ def train_model(dataloaders,
             pickle.dump(all_losses, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     history = {'model': model,
-               'all_losses': all_losses
+               'all_losses': all_losses,
+               'mAP': epochs_mAP
               }
 
     plot_history = dict()
