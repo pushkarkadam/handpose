@@ -38,3 +38,4 @@ Added
 - Loss function returns a dictionary of all losses.
 - Added Scheduler class for flexible use of schedulers.
 - Train function added to train the model.
+- Example file for training added.

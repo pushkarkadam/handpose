@@ -13,6 +13,7 @@ Welcome to handpose's documentation!
    readme
    modules
    training
+   examples
    documentation
    changelog
 
