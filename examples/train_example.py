@@ -18,7 +18,7 @@ def main() -> int:
     weights = 'ResNet18_Weights.IMAGENET1K_V1'
     model_name = 'resnet18'
     freeze_weights = False
-    data_dir = '../data/freihand_data'
+    data_dir = '../data/dev'
     save_model_path = '../data/runs'
     num_epochs = 1
     iou_threshold = 0.5
@@ -63,6 +63,8 @@ def main() -> int:
         require_kpt_conf=require_kpt_conf,
         freeze_weights=freeze_weights
     )
+
+    model.to(device)
 
     history = train_model(dataloaders,
                     dataset_sizes,
