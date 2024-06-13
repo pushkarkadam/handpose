@@ -65,7 +65,7 @@ class TransferNetwork(torch.nn.Module):
         
         self.model = torch.hub.load(repo_or_dir, model_name, weights=weights)
 
-        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
         # Freezes weights for transfer learning
         if freeze_weights:
@@ -98,7 +98,7 @@ class TransferNetwork(torch.nn.Module):
             raise
             
     def forward(self, x):
-        return self.model(x).to(device)
+        return self.model(x).to(self.device)
 
     def summary(self):
         """Returns the summary of the network."""
