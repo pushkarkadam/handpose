@@ -2,9 +2,6 @@
 handpose package
 ================
 
-Module contents
----------------
-
 Helpers
 ^^^^^^^
 
