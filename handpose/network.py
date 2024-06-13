@@ -96,7 +96,10 @@ class TransferNetwork(torch.nn.Module):
             raise
             
     def forward(self, x):
-        return self.model(x)
+        if torch.cuda.is_available():
+            return self.model(x).cuda()
+        else:
+            return self.model(x)
 
     def summary(self):
         """Returns the summary of the network."""
