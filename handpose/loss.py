@@ -1,6 +1,8 @@
 import torch 
 import copy
 
+DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
 
 def box_loss(box_truth, box_pred, obj_conf, lambda_coord, epsilon=1e-6):
     r"""Box loss
@@ -60,7 +62,7 @@ def box_loss(box_truth, box_pred, obj_conf, lambda_coord, epsilon=1e-6):
     xp, yp, wp, hp = box_pred
 
     # Works as an indicator function
-    obj_indicator = obj_conf
+    obj_indicator = obj_conf.to(DEVICE)
 
     # Mean square error
     mse = torch.nn.MSELoss(reduction="sum")
@@ -68,10 +70,10 @@ def box_loss(box_truth, box_pred, obj_conf, lambda_coord, epsilon=1e-6):
     # Using indicator function by multiplying the box coordinates
     xd = mse(xt * obj_indicator, xp * obj_indicator)
     yd = mse(yt * obj_indicator, yp * obj_indicator)
-    wd = mse(torch.sqrt(wt + epsilon) * obj_indicator, torch.sqrt(wp + epsilon) * obj_indicator)
-    hd = mse(torch.sqrt(ht + epsilon) * obj_indicator, torch.sqrt(hp + epsilon) * obj_indicator)
+    wd = mse(torch.sqrt(wt + torch.tensor(epsilon).to(DEVICE)) * obj_indicator, torch.sqrt(wp + torch.tensor(epsilon).to(DEVICE)) * obj_indicator)
+    hd = mse(torch.sqrt(ht + torch.tensor(epsilon).to(DEVICE)) * obj_indicator, torch.sqrt(hp + torch.tensor(epsilon).to(DEVICE)) * obj_indicator)
 
-    loss = lambda_coord * ((xd + yd) + (wd + hd))
+    loss = torch.tensor(lambda_coord).to(DEVICE) * ((xd + yd) + (wd + hd))
 
     return loss
 
@@ -114,10 +116,10 @@ def conf_loss(conf_truth, conf_pred, lambda_noobj):
     cp = conf_pred
     mse = torch.nn.MSELoss(reduction="sum")
 
-    obj_loss = mse(ct * obj_indicator, cp * obj_indicator)
-    noobj_loss = mse(ct * noobj_indicator, cp * noobj_indicator)
+    obj_loss = mse(ct * obj_indicator.to(DEVICE), cp * obj_indicator.to(DEVICE))
+    noobj_loss = mse(ct * noobj_indicator.to(DEVICE), cp * noobj_indicator.to(DEVICE))
 
-    loss = obj_loss + lambda_noobj * noobj_loss
+    loss = obj_loss + torch.tensor(lambda_noobj).to(DEVICE) * noobj_loss
 
     return loss
 
@@ -235,7 +237,7 @@ def kpt_loss(kpt_truth, kpt_pred, obj_conf, lambda_kpt=0.5):
 
         loss +=  (dx + dy) / 2.0
 
-    return lambda_kpt * loss
+    return torch.tensor(lambda_kpt).to(DEVICE) * loss
 
 def kpt_conf_loss(k_conf_truth, k_conf_pred, obj_conf, lambda_kpt_conf=1):
     r"""Calculates the loss of keypoint confidence.
@@ -293,7 +295,7 @@ def kpt_conf_loss(k_conf_truth, k_conf_pred, obj_conf, lambda_kpt_conf=1):
 
         loss += mse(conf_truth, conf_pred)
 
-    return lambda_kpt_conf * loss
+    return torch.tensor(lambda_kpt_conf).to(DEVICE) * loss
 
 def loss_fn(truth, prediction, lambda_coord=5, lambda_noobj=0.5, epsilon=1e-6, lambda_kpt=0.5, lambda_kpt_conf=0.5):
     r"""Computes loss and returns a dictionary of all the losses.
@@ -401,12 +403,12 @@ def loss_fn(truth, prediction, lambda_coord=5, lambda_noobj=0.5, epsilon=1e-6, l
     # Adding all the losses
     loss = L_box + L_conf + L_class + L_kpt + L_kpt_conf
 
-    all_losses = {'total_loss': loss, 
-                  'box_loss': L_box,
-                  'conf_loss': L_conf,
-                  'class_loss': L_class,
-                  'kpt_loss': L_kpt,
-                  'kpt_conf_loss': L_kpt_conf 
+    all_losses = {'total_loss': loss.to(DEVICE), 
+                  'box_loss': L_box.to(DEVICE),
+                  'conf_loss': L_conf.to(DEVICE),
+                  'class_loss': L_class.to(DEVICE),
+                  'kpt_loss': L_kpt.to(DEVICE),
+                  'kpt_conf_loss': L_kpt_conf.to(DEVICE) 
                  }
 
     return all_losses

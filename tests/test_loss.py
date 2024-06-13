@@ -6,6 +6,8 @@ sys.path.append('../')
 
 import handpose 
 
+DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
 
 def test_box_loss1():
     """Tests box_loss()"""
@@ -215,6 +217,7 @@ def test_loss1():
     all_losses = handpose.loss.loss_fn(truth, prediction, lambda_coord, lambda_noobj, epsilon, lambda_kpt, lambda_kpt_conf)
     
     torch.testing.assert_close(all_losses['total_loss'], torch.tensor(0.0))
+    assert(all_losses['total_loss'].device == DEVICE)
 
 def test_loss2():
     """Tests loss()"""
@@ -260,3 +263,4 @@ def test_loss2():
     all_losses = handpose.loss.loss_fn(truth, prediction, lambda_coord, lambda_noobj, epsilon, lambda_kpt, lambda_kpt_conf)
 
     torch.testing.assert_close(all_losses['total_loss'], torch.tensor(0.0))
+    assert(all_losses['total_loss'].device == DEVICE)
