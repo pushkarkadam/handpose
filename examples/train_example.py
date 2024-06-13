@@ -18,7 +18,7 @@ def main() -> int:
     weights = 'ResNet18_Weights.IMAGENET1K_V1'
     model_name = 'resnet18'
     freeze_weights = False
-    data_dir = '../data/dev'
+    data_dir = '../data/freihand_data'
     save_model_path = '../data/runs'
     num_epochs = 1
     iou_threshold = 0.5
