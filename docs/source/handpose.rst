@@ -60,3 +60,18 @@ Optimizer
     :members:
     :undoc-members:
     :show-inheritance:
+
+Train
+^^^^^
+
+.. automodule:: handpose.train 
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Plots
+^^^^^
+.. automodule:: handpose.plots 
+    :members:
+    :undoc-members:
+    :show-inheritance:

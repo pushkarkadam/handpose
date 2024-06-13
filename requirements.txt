@@ -9,3 +9,4 @@ sphinx
 pytest
 torchsummary
 scikit-learn
+sphinxcontrib-mermaid

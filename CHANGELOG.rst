@@ -35,3 +35,6 @@ Added
 - Optimizer function added.
 - Non-Max suppression (NMS) function added.
 - Mean average precision calculation added.
+- Loss function returns a dictionary of all losses.
+- Added Scheduler class for flexible use of schedulers.
+- Train function added to train the model.

@@ -212,9 +212,9 @@ def test_loss1():
     lambda_kpt = 0.5 
     lambda_kpt_conf = 0.5
 
-    loss = handpose.loss.loss_fn(truth, prediction, lambda_coord, lambda_noobj, epsilon, lambda_kpt, lambda_kpt_conf)
+    all_losses = handpose.loss.loss_fn(truth, prediction, lambda_coord, lambda_noobj, epsilon, lambda_kpt, lambda_kpt_conf)
     
-    torch.testing.assert_close(loss, torch.tensor(0.0))
+    torch.testing.assert_close(all_losses['total_loss'], torch.tensor(0.0))
 
 def test_loss2():
     """Tests loss()"""
@@ -257,6 +257,6 @@ def test_loss2():
     lambda_kpt = 0.5 
     lambda_kpt_conf = 0.5
 
-    loss = handpose.loss.loss_fn(truth, prediction, lambda_coord, lambda_noobj, epsilon, lambda_kpt, lambda_kpt_conf)
+    all_losses = handpose.loss.loss_fn(truth, prediction, lambda_coord, lambda_noobj, epsilon, lambda_kpt, lambda_kpt_conf)
 
-    torch.testing.assert_close(loss, torch.tensor(0.0))
+    torch.testing.assert_close(all_losses['total_loss'], torch.tensor(0.0))
