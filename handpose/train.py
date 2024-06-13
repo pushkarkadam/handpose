@@ -171,6 +171,9 @@ def train_model(dataloaders,
                 for k, v in data.items():
                     if isinstance(v, torch.Tensor):
                         data[k] = v.to(device)
+                    else:
+                        for k1, v1 in data[k].items():
+                            data[k][k1] = v1.to(device)
     
                 # Assigning the current batch size
                 current_batch_size = images.size(0)
