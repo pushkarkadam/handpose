@@ -1,6 +1,8 @@
 import torch 
 import copy
 
+DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
 
 def box_loss(box_truth, box_pred, obj_conf, lambda_coord, epsilon=1e-6):
     r"""Box loss
@@ -401,12 +403,12 @@ def loss_fn(truth, prediction, lambda_coord=5, lambda_noobj=0.5, epsilon=1e-6, l
     # Adding all the losses
     loss = L_box + L_conf + L_class + L_kpt + L_kpt_conf
 
-    all_losses = {'total_loss': loss, 
-                  'box_loss': L_box,
-                  'conf_loss': L_conf,
-                  'class_loss': L_class,
-                  'kpt_loss': L_kpt,
-                  'kpt_conf_loss': L_kpt_conf 
+    all_losses = {'total_loss': loss.to(DEVICE), 
+                  'box_loss': L_box.to(DEVICE),
+                  'conf_loss': L_conf.to(DEVICE),
+                  'class_loss': L_class.to(DEVICE),
+                  'kpt_loss': L_kpt.to(DEVICE),
+                  'kpt_conf_loss': L_kpt_conf.to(DEVICE) 
                  }
 
     return all_losses
