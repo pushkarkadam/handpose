@@ -200,6 +200,13 @@ def train_model(dataloaders,
     
                     # Using the best boxes
                     best_pred_head = best_box(pred_head_act, iou_threshold=iou_threshold)
+
+                    for k, v in best_pred_head.items():
+                        if isinstance(v, torch.Tensor):
+                            best_pred_head[k] = v.to(device)
+                        elif isinstance(v, dict):
+                            for k1, v1 in best_pred_head[k].items():
+                                best_pred_head[k][k1] = v1.to(device)
     
                     phase_losses = loss_fn(data, best_pred_head, lambda_coord, lambda_noobj, epsilon, lambda_kpt, lambda_kpt_conf)
 
