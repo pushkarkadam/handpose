@@ -75,7 +75,7 @@ def main() -> int:
                     B,
                     nkpt,
                     nc,
-                    verbose=False,
+                    verbose=True,
                     save_model_path=save_model_path,
                     train_dir='train',
                     optimizer='default',

@@ -162,7 +162,7 @@ def train_model(dataloaders,
             else:
                 model.eval()
     
-            for i, train_data in enumerate(dataloaders[phase], start=0):
+            for i, train_data in enumerate(tqdm(dataloaders[phase]), start=0):
                 images = train_data[0].to(device)
                 data = train_data[1]['head']
                 image_names = train_data[1]['image_name']
