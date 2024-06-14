@@ -208,7 +208,7 @@ def kpt_loss(kpt_truth, kpt_pred, obj_conf, lambda_kpt=0.5):
     
     """
 
-    loss = torch.tensor(0.0)
+    loss = torch.tensor(0.0).to(DEVICE)
 
     nkpt = int(len(list(kpt_truth.keys())) / 2)
     nkpt_pred = int(len(list(kpt_truth.keys())) / 2)
@@ -220,7 +220,7 @@ def kpt_loss(kpt_truth, kpt_pred, obj_conf, lambda_kpt=0.5):
         print("\033[91m"+ f"Truth keypoints {nkpt} != Prediction keypoitns {nkpt_pred}")
         raise
 
-    obj_indicator = obj_conf
+    obj_indicator = obj_conf.to(DEVICE)
     mse = torch.nn.MSELoss(reduction="sum")
     
     for i in range(nkpt):
@@ -235,7 +235,7 @@ def kpt_loss(kpt_truth, kpt_pred, obj_conf, lambda_kpt=0.5):
         dx = mse(kx_truth, kx_pred)
         dy = mse(ky_truth, ky_pred)
 
-        loss +=  (dx + dy) / 2.0
+        loss +=  (dx + dy) / torch.tensor(2.0).to(DEVICE)
 
     return torch.tensor(lambda_kpt).to(DEVICE) * loss
 
@@ -273,7 +273,7 @@ def kpt_conf_loss(k_conf_truth, k_conf_pred, obj_conf, lambda_kpt_conf=1):
     >>> loss = kpt_conf_loss(kpt_truth, kpt_pred, obj_conf, nkpt)
 
     """
-    loss = torch.tensor(0.0)
+    loss = torch.tensor(0.0).to(DEVICE)
 
     nkpt = int(len(list(k_conf_truth.keys())))
     nkpt_pred = int(len(list(k_conf_pred.keys())))
@@ -285,7 +285,7 @@ def kpt_conf_loss(k_conf_truth, k_conf_pred, obj_conf, lambda_kpt_conf=1):
         print("\033[91m"+ f"Truth keypoints {nkpt} != Prediction keypoitns {nkpt_pred}")
         raise
 
-    obj_indicator = obj_conf
+    obj_indicator = obj_conf.to(DEVICE)
     mse = torch.nn.MSELoss(reduction="sum")
     
     for i in range(nkpt):
