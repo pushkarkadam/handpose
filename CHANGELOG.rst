@@ -16,6 +16,10 @@ Added
 ^^^^^
 - Progress bar added for each batch.
 
+Fixed
+^^^^^
+- Problems with tensors not assigned to device.
+
 [0.1.0] - 2024-06-13
 --------------------
 
