@@ -172,6 +172,7 @@ def train_model(dataloaders,
                     if isinstance(v, torch.Tensor):
                         data[k] = v.to(device)
                     else:
+                        # Adding each tensor of keypoints to the device
                         for k1, v1 in data[k].items():
                             data[k][k1] = v1.to(device)
     
