@@ -9,6 +9,14 @@ and this project adheres to `Semantic Versioning`_.
 .. _Keep a Changelog: https://keepachangelog.com/en/1.0.0/
 .. _Semantic Versioning: https://semver.org/spec/v2.0.0.html
 
+[0.1.10] - 2024-07-11
+---------------------
+
+Added
+^^^^^
+- Average box ratio of the image added.
+
+
 [0.1.9] - 2024-06-14
 --------------------
 
