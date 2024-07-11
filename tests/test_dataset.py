@@ -205,3 +205,14 @@ def test_dataset():
     assert(list(head['kpt_polar'].keys()) == kpts_polar)
     assert(type(image_name) == list)
     assert(len(image_name) == 16)
+
+def test_box_ratio():
+    """Tests box_ratio"""
+
+    label_dir = 'tests/test_labels2'
+
+    mean_ratio = handpose.dataset.box_ratio(label_dir)
+
+    assert(isinstance(mean_ratio, torch.Tensor))
+
+    torch.testing.assert_close(mean_ratio, torch.tensor(0.1875))
