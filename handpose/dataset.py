@@ -4,6 +4,7 @@ import numpy as np
 from torch.utils.data import Dataset 
 import torchvision.transforms as transforms
 from PIL import Image
+from tqdm import tqdm
 
 
 def read_label(file_path):
@@ -502,7 +503,7 @@ def box_ratio(label_dir):
 
     ratio = []
 
-    for files in files_path:
+    for files in tqdm(files_path):
         # Read files
         labels = read_label(files)
     
