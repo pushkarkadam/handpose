@@ -474,3 +474,50 @@ class HandDataset(Dataset):
                }
 
         return image, data
+
+def box_ratio(label_dir):
+    r"""Calculates the mean ratio of box to the image.
+
+    .. math::
+        \frac{a}{A} = w.h
+
+    Parameters
+    ----------
+    label_dir: str
+        Name of the directory where the labels are stored as `.txt` files.
+
+    Returns
+    -------
+    torch.tensor
+    
+    Examples
+    --------
+    >>> label_dir = 'tests/test_labels2'
+    >>> mean_ratio = handpose.dataset.box_ratio(label_dir)
+    
+    """
+    label_files = os.listdir(label_dir)
+
+    files_path = [os.path.join(label_dir, f) for f in label_files]
+
+    ratio = []
+
+    for files in files_path:
+        # Read files
+        labels = read_label(files)
+    
+        try:
+            # for each line in the label file
+            for l in labels:
+                # Extracting width and heigh
+                w, h = l[3:5]
+
+                # Appending to the ratio
+                ratio.append(w * h)
+    
+        except Exception as e:
+            print(e)
+
+        mean_ratio = torch.mean(torch.Tensor(ratio))
+
+    return mean_ratio
