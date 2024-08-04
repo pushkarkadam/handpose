@@ -75,6 +75,52 @@ def test_box_loss3():
 
     assert(loss == torch.tensor(0))
 
+def test_box_loss4():
+    """Test for box_loss()"""
+    x = torch.Tensor([0.5]).reshape(1,1,1,1)
+    y = torch.Tensor([0.5]).reshape(1,1,1,1)
+    w = torch.Tensor([0.5]).reshape(1,1,1,1)
+    h = torch.Tensor([0.5]).reshape(1,1,1,1)
+
+    xp = torch.Tensor([0.4]).reshape(1,1,1,1)
+    yp = torch.Tensor([0.4]).reshape(1,1,1,1)
+    wp = torch.Tensor([0.4]).reshape(1,1,1,1)
+    hp = torch.Tensor([0.4]).reshape(1,1,1,1)
+
+    obj_conf = torch.Tensor([1]).reshape(1,1,1,1)
+
+    box_truth = (x, y, w, h)
+    box_pred = (xp, yp, wp, hp)
+
+    loss = handpose.loss.box_loss(box_truth, box_pred, obj_conf, lambda_coord=1)
+
+    manual_calc = (x - xp)**2 + (y - yp)**2 + (w**(1/2) - wp**(1/2))**2 + (h**(1/2) - hp**(1/2))**2
+
+    torch.testing.assert_close(loss, manual_calc.squeeze())
+
+def test_box_loss5():
+    """Test for box_loss()"""
+    x = torch.Tensor([[0.5], [0.5]]).reshape(2,1,1,1)
+    y = torch.Tensor([[0.5], [0.5]]).reshape(2,1,1,1)
+    w = torch.Tensor([[0.5], [0.5]]).reshape(2,1,1,1)
+    h = torch.Tensor([[0.5], [0.5]]).reshape(2,1,1,1)
+
+    xp = torch.Tensor([[0.4], [0.3]]).reshape(2,1,1,1)
+    yp = torch.Tensor([[0.4], [0.3]]).reshape(2,1,1,1)
+    wp = torch.Tensor([[0.4], [0.3]]).reshape(2,1,1,1)
+    hp = torch.Tensor([[0.4], [0.3]]).reshape(2,1,1,1)
+
+    obj_conf = torch.Tensor([[1], [1]]).reshape(2,1,1,1)
+
+    box_truth = (x, y, w, h)
+    box_pred = (xp, yp, wp, hp)
+
+    loss = handpose.loss.box_loss(box_truth, box_pred, obj_conf, lambda_coord=1)
+
+    manual_calc = torch.sum((x - xp)**2 + (y - yp)**2 + (w**(1/2) - wp**(1/2))**2 + (h**(1/2) - hp**(1/2))**2) / x.size(0)
+
+    torch.testing.assert_close(loss, manual_calc.squeeze())
+
 def test_conf_loss():
     """Tests conf_loss()"""
 
