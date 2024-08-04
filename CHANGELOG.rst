@@ -9,6 +9,14 @@ and this project adheres to `Semantic Versioning`_.
 .. _Keep a Changelog: https://keepachangelog.com/en/1.0.0/
 .. _Semantic Versioning: https://semver.org/spec/v2.0.0.html
 
+[0.1.11] - 2024-08-04
+---------------------
+
+Fixed 
+^^^^^
+- Calculating loss over batch size in all the loss functions.
+
+
 [0.1.10] - 2024-07-11
 ---------------------
 
