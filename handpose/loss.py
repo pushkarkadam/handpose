@@ -127,7 +127,7 @@ def conf_loss(conf_truth, conf_pred, lambda_noobj):
 
     return loss / batch_size
 
-def class_loss(classes_truth, classes_pred, obj_conf):
+def class_loss(classes_truth, classes_pred, obj_conf, lambda_class=0.05):
     r"""Class loss.
 
     .. math::
@@ -172,7 +172,7 @@ def class_loss(classes_truth, classes_pred, obj_conf):
 
     loss = bce_loss(cp * obj_indicator, ct * obj_indicator)
 
-    return loss / batch_size
+    return (torch.tensor(lambda_class).to(DEVICE) * loss) / batch_size
 
 def kpt_loss(kpt_truth, kpt_pred, obj_conf, lambda_kpt=0.5):
     r"""Keypoint loss.
