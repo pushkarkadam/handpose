@@ -174,6 +174,48 @@ def class_loss(classes_truth, classes_pred, obj_conf, lambda_class=0.05):
 
     return (torch.tensor(lambda_class).to(DEVICE) * loss) / batch_size
 
+def class_loss_mse(classes_truth, classes_pred, obj_conf, lambda_class=1):
+    r"""Class loss using regression.
+
+    .. math::
+
+        loss_{class} = \sum_{i = 0}^{S^2}
+        1_i^{\text{obj}}
+            \sum_{c \in \textrm{classes}}
+                \left(
+                    p_i(c) - \hat{p}_i(c)
+                \right)^2
+    
+    
+    Parameters
+    ----------
+    classes_truth: torch.Tensor
+        A tensor of truth classes.
+    classes_pred: torch.Tensor
+        A tensor of prediction classes.
+    obj_conf: torch.Tensor
+        A tensor of object confidence from ground truth.
+
+    Returns
+    -------
+    torch.tensor
+    
+    """
+
+    ct = classes_truth
+    cp = classes_pred
+    obj_indicator = obj_conf
+
+    # Extracting batch size
+    batch_size = ct.size(0)
+
+    # Mean square error 
+    mse = torch.nn.MSELoss(reduction="sum")
+
+    loss = mse(ct * obj_indicator, cp * obj_indicator)
+    
+    return (torch.tensor(lambda_class).to(DEVICE) * loss) / batch_size
+
 def kpt_loss(kpt_truth, kpt_pred, obj_conf, lambda_kpt=0.5):
     r"""Keypoint loss.
 
