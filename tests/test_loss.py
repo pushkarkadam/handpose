@@ -142,6 +142,34 @@ def test_class_loss():
 
     torch.testing.assert_close(loss, torch.tensor(0.0))
 
+
+def test_class_loss_mse1():
+    """Test class_loss_mse()"""
+
+    classes_truth = torch.cat([torch.ones(1,1,3,3), torch.zeros(1,1,3,3)], dim=1)
+    classes_pred = torch.cat([torch.ones(1,1,3,3), torch.zeros(1,1,3,3)], dim=1)
+    obj_conf = torch.ones((1,1,3,3))
+
+    loss = handpose.loss.class_loss_mse(classes_truth, classes_pred, obj_conf)
+
+    torch.testing.assert_close(loss, torch.tensor(0.0))
+
+def test_class_loss_mse2():
+    """Test class_loss_mse()"""
+    
+    obj_conf = torch.ones((1,1,3,3))
+
+    classes_truth = torch.cat([torch.zeros(1,1,3,3), torch.ones(1,1,3,3)], dim=1)
+    classes_pred = torch.cat([torch.zeros(1,1,3,3), torch.ones(1,1,3,3)], dim=1)
+    classes_pred[0,0,1,1] = 1
+    classes_pred[0,1,1,1] = 0
+
+    loss1 = handpose.loss.class_loss_mse(classes_truth, classes_pred, obj_conf, lambda_class=1)
+    loss2 = handpose.loss.class_loss_mse(classes_truth, classes_pred, obj_conf, lambda_class=0.5)
+
+    torch.testing.assert_close(loss1, torch.tensor(2.0))
+    torch.testing.assert_close(loss2, torch.tensor(1.0))
+
 def test_kpt_loss1():
     """Tests kpt_loss()"""
 
