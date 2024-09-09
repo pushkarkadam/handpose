@@ -444,7 +444,7 @@ def loss_fn(truth, prediction, lambda_coord=5, lambda_noobj=0.5, epsilon=1e-6, l
     L_conf = conf_loss(conf_truth=conf_truth, conf_pred=conf_pred, lambda_noobj=lambda_noobj)
 
     # class loss 
-    L_class = class_loss(classes_truth=classes_truth, classes_pred=classes_pred, obj_conf=conf_truth)
+    L_class = class_loss_mse(classes_truth=classes_truth, classes_pred=classes_pred, obj_conf=conf_truth)
 
     # keypoint loss
     L_kpt = kpt_loss(kpt_truth=kpt_truth, kpt_pred=kpt_pred, obj_conf=conf_truth, lambda_kpt=lambda_kpt)
