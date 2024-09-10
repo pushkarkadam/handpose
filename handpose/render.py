@@ -143,7 +143,7 @@ def render_pose(images, head, is_relative=True, show_keypoint_label=True, classe
 
     return rendered_images
 
-def display_images_in_grid(rendered_images, grid_shape=None, save_path=None):
+def display_images_in_grid(rendered_images, grid_shape=None, save_path=None, figsize=(12,6)):
     """Displays rendered images in grid.
 
     Parameters
@@ -152,8 +152,6 @@ def display_images_in_grid(rendered_images, grid_shape=None, save_path=None):
         A list of rendered images.
     grid_shape: tuple, default ``None``
         The grid to display the images.
-    save_path: str, default ``None``
-        The path where the figure must be saved.
 
     Examples
     --------
@@ -167,7 +165,7 @@ def display_images_in_grid(rendered_images, grid_shape=None, save_path=None):
     else:
         num_rows, num_cols = grid_shape
 
-    fig, axes = plt.subplots(num_rows, num_cols, figsize=(12, 12))
+    fig, axes = plt.subplots(num_rows, num_cols, figsize=figsize)
 
     for i, ax in enumerate(axes.flat):
         if i < len(rendered_images):
@@ -175,10 +173,11 @@ def display_images_in_grid(rendered_images, grid_shape=None, save_path=None):
             ax.axis('off')
         else:
             ax.axis('off')
-
+            
+    plt.subplots_adjust(wspace=0, hspace=0)
     plt.tight_layout(pad=0)
 
     if save_path is not None:
-        plt.savefig(save_path)
+        plt.savefig(save_path, bbox_inches='tight', pad_inches=0)
         
     plt.show()
