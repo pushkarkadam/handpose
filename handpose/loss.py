@@ -77,7 +77,7 @@ def box_loss(box_truth, box_pred, obj_conf, lambda_coord, epsilon=1e-6):
 
     loss = torch.tensor(lambda_coord).to(DEVICE) * ((xd + yd) + (wd + hd))
 
-    return loss / batch_size
+    return loss / torch.tensor(batch_size).to(DEVICE)
 
 def conf_loss(conf_truth, conf_pred, lambda_noobj):
     r"""Confidence loss.
@@ -125,7 +125,7 @@ def conf_loss(conf_truth, conf_pred, lambda_noobj):
 
     loss = obj_loss + torch.tensor(lambda_noobj).to(DEVICE) * noobj_loss
 
-    return loss / batch_size
+    return loss / torch.tensor(batch_size).to(DEVICE)
 
 def class_loss(classes_truth, classes_pred, obj_conf, lambda_class=0.05):
     r"""Class loss.
@@ -172,7 +172,7 @@ def class_loss(classes_truth, classes_pred, obj_conf, lambda_class=0.05):
 
     loss = bce_loss(cp * obj_indicator, ct * obj_indicator)
 
-    return (torch.tensor(lambda_class).to(DEVICE) * loss) / batch_size
+    return (torch.tensor(lambda_class).to(DEVICE) * loss) / torch.tensor(batch_size).to(DEVICE)
 
 def class_loss_mse(classes_truth, classes_pred, obj_conf, lambda_class=1):
     r"""Class loss using regression.
@@ -214,7 +214,7 @@ def class_loss_mse(classes_truth, classes_pred, obj_conf, lambda_class=1):
 
     loss = mse(ct * obj_indicator, cp * obj_indicator)
     
-    return (torch.tensor(lambda_class).to(DEVICE) * loss) / batch_size
+    return (torch.tensor(lambda_class).to(DEVICE) * loss) / torch.tensor(batch_size).to(DEVICE)
 
 def kpt_loss(kpt_truth, kpt_pred, obj_conf, lambda_kpt=0.5):
     r"""Keypoint loss.
@@ -285,9 +285,9 @@ def kpt_loss(kpt_truth, kpt_pred, obj_conf, lambda_kpt=0.5):
         dx = mse(kx_truth, kx_pred)
         dy = mse(ky_truth, ky_pred)
 
-        loss +=  (dx + dy) / torch.tensor(2.0).to(DEVICE)
+        loss += torch.tensor(1).to(DEVICE) - torch.exp(-((dx + dy) / torch.tensor(2.0).to(DEVICE)))
 
-    return (torch.tensor(lambda_kpt).to(DEVICE) * loss) / batch_size
+    return (torch.tensor(lambda_kpt).to(DEVICE) * loss) / torch.tensor(batch_size).to(DEVICE)
 
 def kpt_loss_euclidean(kpt_truth, kpt_pred, obj_conf, lambda_kpt=0.5):
     r"""Keypoint loss.
@@ -362,9 +362,11 @@ def kpt_loss_euclidean(kpt_truth, kpt_pred, obj_conf, lambda_kpt=0.5):
 
         # loss +=  (dx + dy) / torch.tensor(2.0).to(DEVICE)
 
-        loss += torch.sqrt(torch.square(dx) + torch.square(dy) + epsilon)
+        # loss += torch.sqrt(torch.square(dx) + torch.square(dy) + epsilon)
 
-    return (torch.tensor(lambda_kpt).to(DEVICE) * loss) / batch_size
+        loss += (torch.square(dx) + torch.square(dy))
+
+    return (torch.tensor(lambda_kpt).to(DEVICE) * loss) / torch.tensor(batch_size).to(DEVICE)
 
 def kpt_conf_loss(k_conf_truth, k_conf_pred, obj_conf, lambda_kpt_conf=1):
     r"""Calculates the loss of keypoint confidence.
@@ -424,7 +426,7 @@ def kpt_conf_loss(k_conf_truth, k_conf_pred, obj_conf, lambda_kpt_conf=1):
 
         loss += mse(conf_truth, conf_pred)
 
-    return (torch.tensor(lambda_kpt_conf).to(DEVICE) * loss) / batch_size
+    return (torch.tensor(lambda_kpt_conf).to(DEVICE) * loss) / torch.tensor(batch_size).to(DEVICE)
 
 def loss_fn(truth, prediction, lambda_coord=5, lambda_noobj=0.5, epsilon=1e-6, lambda_kpt=0.5, lambda_kpt_conf=0.5):
     r"""Computes loss and returns a dictionary of all the losses.
@@ -524,13 +526,14 @@ def loss_fn(truth, prediction, lambda_coord=5, lambda_noobj=0.5, epsilon=1e-6, l
     L_class = class_loss_mse(classes_truth=classes_truth, classes_pred=classes_pred, obj_conf=conf_truth)
 
     # keypoint loss
-    L_kpt = kpt_loss_euclidean(kpt_truth=kpt_truth, kpt_pred=kpt_pred, obj_conf=conf_truth, lambda_kpt=lambda_kpt)
+    # L_kpt = kpt_loss_euclidean(kpt_truth=kpt_truth, kpt_pred=kpt_pred, obj_conf=conf_truth, lambda_kpt=lambda_kpt)
+    L_kpt = kpt_loss(kpt_truth=kpt_truth, kpt_pred=kpt_pred, obj_conf=conf_truth, lambda_kpt=lambda_kpt)
 
     # keypoint confidence loss 
     L_kpt_conf = kpt_conf_loss(k_conf_truth=kpt_conf_truth, k_conf_pred=kpt_conf_pred, obj_conf=conf_truth, lambda_kpt_conf=lambda_kpt_conf)
 
     # Adding all the losses
-    loss = L_box + L_conf + L_class + L_kpt + L_kpt_conf
+    loss = L_box + L_conf + L_class + L_kpt
 
     all_losses = {'total_loss': loss.to(DEVICE), 
                   'box_loss': L_box.to(DEVICE),
