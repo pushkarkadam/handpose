@@ -285,7 +285,7 @@ def kpt_loss(kpt_truth, kpt_pred, obj_conf, lambda_kpt=0.5):
         dx = mse(kx_truth, kx_pred)
         dy = mse(ky_truth, ky_pred)
 
-        loss += torch.tensor(1).to(DEVICE) - torch.exp(-((dx + dy) / torch.tensor(2.0).to(DEVICE)))
+        loss += torch.tensor(1).to(DEVICE) - torch.exp(-torch.sqrt(((dx + dy) / torch.tensor(2.0).to(DEVICE))+1e-5))
 
     return (torch.tensor(lambda_kpt).to(DEVICE) * loss) / torch.tensor(batch_size).to(DEVICE)
 
@@ -359,10 +359,6 @@ def kpt_loss_euclidean(kpt_truth, kpt_pred, obj_conf, lambda_kpt=0.5):
 
         dx = mse(kx_truth, kx_pred)
         dy = mse(ky_truth, ky_pred)
-
-        # loss +=  (dx + dy) / torch.tensor(2.0).to(DEVICE)
-
-        # loss += torch.sqrt(torch.square(dx) + torch.square(dy) + epsilon)
 
         loss += (torch.square(dx) + torch.square(dy))
 
