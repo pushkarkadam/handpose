@@ -182,7 +182,7 @@ def display_images_in_grid(rendered_images, grid_shape=None, save_path=None, fig
         
     plt.show()
 
-def render_detection(image, head, head_nms, conf_threshold, show_grid=False, save_path=''):
+def render_detection(image, head, head_nms, conf_threshold, show_grid=False, save_path='',classes={0: "right", 1:"left"}, box_color={0: "red", 1:"orange"}, text_color={0: "white", 1:"white"}):
     r"""Returns a rendered image
 
     head --> [batch -> [image objects]]
@@ -201,7 +201,13 @@ def render_detection(image, head, head_nms, conf_threshold, show_grid=False, sav
         Shows the grid of the prediction size.
     save_path: str, default `''`
         Path to save the image. example `~/path/to/image.png`
-    
+    classes: dict, default ``{0: "right", 1:"left"}``
+        The classes in the dataset and their labels.
+    box_color: dict, default ``{0: "red", 1:"orange"}``
+        Color of the bounding box.
+    text_color: dict, default ``{0: "white", 1:"white"}``
+        Color of the text on top of the bounding box.
+        
     """
 
     # Edges connecting different keypoints
@@ -227,6 +233,12 @@ def render_detection(image, head, head_nms, conf_threshold, show_grid=False, sav
 
             kx = (torch.Tensor(head['kx'][0][i]) * torch.tensor(W)).tolist()
             ky = (torch.Tensor(head['ky'][0][i]) * torch.tensor(H)).tolist()
+
+            class_index = int(head['class_idx'][0][i])
+            class_name = classes[class_index]
+            conf_score = float(head['conf_score'][0][i])
+
+            print(class_index)
             
             kpts_list = [(kxn, kyn) for kxn, kyn in zip(kx, ky)]
 
@@ -244,9 +256,10 @@ def render_detection(image, head, head_nms, conf_threshold, show_grid=False, sav
 
             ax.imshow(image)
 
-            rect = patches.Rectangle((xmin, ymin), (xmax-xmin), (ymax-ymin), linewidth=2, edgecolor='r', facecolor='none')
+            rect = patches.Rectangle((xmin, ymin), (xmax-xmin), (ymax-ymin), linewidth=2, edgecolor=box_color[class_index], facecolor='none')
 
             ax.add_patch(rect)
+            ax.text(xmin, ymin, f"{class_name} [{conf_score:.2f}]", color=text_color[class_index], fontsize=10, ha='left', va='bottom', backgroundcolor=box_color[class_index])
 
             for k_idx, (kx, ky) in enumerate(kpts_list):
                 ax.plot(kx, ky, 'ro')
