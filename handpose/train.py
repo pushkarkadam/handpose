@@ -34,7 +34,8 @@ def train_model(dataloaders,
                 optimizer='default',
                 learning_rate=0.01,
                 lr_momentum=0.9,
-                scheduler='default'
+                scheduler='default',
+                individual_plots=False
                ):
     r"""Training function.
     
@@ -93,6 +94,8 @@ def train_model(dataloaders,
         is used.
         Otherwise, use `torch.optim` scheduler and directly pass
         it as a parameter.
+    individual_plots: bool, default ``False``
+        Does not store the individual plots.
 
     Returns
     -------
@@ -298,9 +301,10 @@ def train_model(dataloaders,
     if save_model_path:
         loss_history = plot_history
 
-        plot_single_history(loss_history, root_path=train_path)
+        if individual_plots:
+            plot_single_history(loss_history, root_path=train_path)
 
-        plot_single_history(mAP_plot_history, root_path=train_path, save_path_prefix='', xlabel='Epoch', ylabel='mAP')
+            plot_single_history(mAP_plot_history, root_path=train_path, save_path_prefix='', xlabel='Epoch', ylabel='mAP')
 
         plot_all_history(loss_history, root_path=train_path)
 
