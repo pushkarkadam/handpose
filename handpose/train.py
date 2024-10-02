@@ -6,6 +6,7 @@ from tqdm import tqdm
 import torch.optim as optim
 from torch.optim import lr_scheduler
 import pickle
+import pandas as pd
 
 sys.path.append('../')
 from handpose import *
@@ -302,5 +303,12 @@ def train_model(dataloaders,
         plot_single_history(mAP_plot_history, root_path=train_path, save_path_prefix='', xlabel='Epoch', ylabel='mAP')
 
         plot_all_history(loss_history, root_path=train_path)
+
+        # CSV files
+        train_loss_df = pd.DataFrame(plot_history['train'])
+        valid_loss_df = pd.DataFrame(plot_history['valid'])
+
+        train_loss_df.to_csv(os.path.join(train_path, 'train_loss.csv'), index=False)
+        valid_loss_df.to_csv(os.path.join(train_path, 'valid_loss.csv'), index=False)
       
     return history
