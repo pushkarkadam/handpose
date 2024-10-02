@@ -35,7 +35,8 @@ def train_model(dataloaders,
                 learning_rate=0.01,
                 lr_momentum=0.9,
                 scheduler='default',
-                individual_plots=False
+                individual_plots=False,
+                losses_types=["total_loss", "box_loss", "conf_loss", "class_loss", "kpt_loss"]
                ):
     r"""Training function.
     
@@ -96,6 +97,8 @@ def train_model(dataloaders,
         it as a parameter.
     individual_plots: bool, default ``False``
         Does not store the individual plots.
+    losses_types: list
+        Types of losses given as a list to be the keys of the dictionary.
 
     Returns
     -------
@@ -120,13 +123,9 @@ def train_model(dataloaders,
         # Final model that is saved after the training is complete
         best_model_path = os.path.join(train_path, 'best.pt')
 
-    losses = {"total_loss": [],
-              "box_loss": [],
-              "conf_loss": [],
-              "class_loss": [],
-              "kpt_loss": [],
-              "kpt_conf_loss": []
-             }
+    losses = dict()
+    for loss_type in losses_types:
+        losses[loss_type] = []
 
     valid_losses = copy.deepcopy(losses)
 

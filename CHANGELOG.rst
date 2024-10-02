@@ -22,6 +22,7 @@ Added
 - Detect function added.
 - Render detection function added.
 - CSV files saving for losses added in training.
+- Options to include the loss types in training.
 
 [0.1.11] - 2024-08-04
 ---------------------
