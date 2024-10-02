@@ -182,15 +182,22 @@ def display_images_in_grid(rendered_images, grid_shape=None, save_path=None, fig
         
     plt.show()
 
-def render_detection(image, head, head_nms, conf_threshold, show_grid=False, save_path='',classes={0: "right", 1:"left"}, box_color={0: "red", 1:"orange"}, text_color={0: "white", 1:"white"}):
+def render_detection(images, 
+                     head, 
+                     head_nms, 
+                     conf_threshold, 
+                     show_grid=False, 
+                     classes={0: "right", 1:"left"}, 
+                     box_color={0: "red", 1:"orange"}, 
+                     text_color={0: "white", 1:"white"}):
     r"""Returns a rendered image
 
     head --> [batch -> [image objects]]
 
     Parameters
     ----------
-    image: torch.Tensor
-        A torch tensor of shape ` (3, H, W)`
+    images: torch.Tensor
+        Images of size ``(m, 3, H, W)``
     head: dict
         A dictionary of the predicted head.
     head_nms: dict
@@ -199,8 +206,6 @@ def render_detection(image, head, head_nms, conf_threshold, show_grid=False, sav
         Confidence threshold for rendering.
     show_grid: bool, default `False`
         Shows the grid of the prediction size.
-    save_path: str, default `''`
-        Path to save the image. example `~/path/to/image.png`
     classes: dict, default ``{0: "right", 1:"left"}``
         The classes in the dataset and their labels.
     box_color: dict, default ``{0: "red", 1:"orange"}``
@@ -212,69 +217,79 @@ def render_detection(image, head, head_nms, conf_threshold, show_grid=False, sav
 
     # Edges connecting different keypoints
     EDGES = [[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[0,9],[9,10],[10,11],[11,12],[0,13],[13,14],[14,15],[15,16],[0,17],[17,18],[18,19],[19,20]]
+
+    # List to store rendered images
+    rendered_images = []
+
+    for idx, image in enumerate(images):
     
-    # Transforming the image from (ch, H, W) -> (H, W, ch)
-    image = image[0].permute(1, 2, 0)
+        # Transforming the image from (ch, H, W) -> (H, W, ch)
+        
+        image = image.permute(1, 2, 0)
+    
+        W, H, _ = image.shape
+    
+        # counting prediction object per images
+        for k, v in head.items():
+            pred_count = len(v[0])
+            break
+    
+        # rendering the detected objects
+        for i in range(pred_count):
+            if head['conf_score'][0][i] > conf_threshold:
+                x = head['x'][0][i] * W
+                y = head['y'][0][i] * H
+                w = head['w'][0][i] * W
+                h = head['h'][0][i] * H
+    
+                kx = (torch.Tensor(head['kx'][0][i]) * torch.tensor(W)).tolist()
+                ky = (torch.Tensor(head['ky'][0][i]) * torch.tensor(H)).tolist()
+    
+                class_index = int(head['class_idx'][0][i])
+                class_name = classes[class_index]
+                conf_score = float(head['conf_score'][0][i])
+                
+                kpts_list = [(kxn, kyn) for kxn, kyn in zip(kx, ky)]
+    
+                edges_list = []
+    
+                for e in EDGES:
+                    start_idx, end_idx = e
+                    start_point = kpts_list[start_idx]
+                    end_point = kpts_list[end_idx]
+                    edges_list.append([[start_point[0], end_point[0]], [start_point[1], end_point[1]]])
+    
+                xmin, ymin, xmax, ymax = (head_nms['boxes'][0] * torch.Tensor([W, H, W, H])).tolist()[i]
+    
+                fig, ax = plt.subplots(figsize=(W / 100, H / 100))
+                ax.axis('off')
+                ax.imshow(image)
+    
+                rect = patches.Rectangle((xmin, ymin), (xmax-xmin), (ymax-ymin), linewidth=2, edgecolor=box_color[class_index], facecolor='none')
+    
+                ax.add_patch(rect)
+                ax.text(xmin, ymin, f"{class_name} [{conf_score:.2f}]", color=text_color[class_index], fontsize=10, ha='left', va='bottom', backgroundcolor=box_color[class_index])
+    
+                for k_idx, (kx, ky) in enumerate(kpts_list):
+                    ax.plot(kx, ky, 'ro')
+                    ax.text(kx, ky, str(k_idx + 1), color='blue', fontsize=10, ha='center', va='center')
+    
+                for e in edges_list:
+                    start, end = e
+                    ax.plot(start, end, 'w-')
+    
+                if show_grid:
+                    x_g = 0
+                    while x_g < (int(H)):
+                        plt.axvline(x=x_g, color="white", linewidth=0.2)
+                        plt.axhline(y=x_g, color="white", linewidth=0.2)
+                        x_g = x_g + int(H/S)
 
-    W, H, _ = image.shape
+                plt.tight_layout(pad=0)
+                # Convert the plot to an image
+                fig.canvas.draw()
+                rendered_image = np.array(fig.canvas.renderer._renderer)[:,:,:3]
+                rendered_images.append(rendered_image)
+                plt.close(fig)
 
-    # counting prediction object per images
-    for k, v in head.items():
-        pred_count = len(v[0])
-        break
-
-    # rendering the detected objects
-    for i in range(pred_count):
-        if head['conf_score'][0][i] > conf_threshold:
-            x = head['x'][0][i] * W
-            y = head['y'][0][i] * H
-            w = head['w'][0][i] * W
-            h = head['h'][0][i] * H
-
-            kx = (torch.Tensor(head['kx'][0][i]) * torch.tensor(W)).tolist()
-            ky = (torch.Tensor(head['ky'][0][i]) * torch.tensor(H)).tolist()
-
-            class_index = int(head['class_idx'][0][i])
-            class_name = classes[class_index]
-            conf_score = float(head['conf_score'][0][i])
-            
-            kpts_list = [(kxn, kyn) for kxn, kyn in zip(kx, ky)]
-
-            edges_list = []
-
-            for e in EDGES:
-                start_idx, end_idx = e
-                start_point = kpts_list[start_idx]
-                end_point = kpts_list[end_idx]
-                edges_list.append([[start_point[0], end_point[0]], [start_point[1], end_point[1]]])
-
-            xmin, ymin, xmax, ymax = (head_nms['boxes'][0] * torch.Tensor([W, H, W, H])).tolist()[i]
-
-            fig, ax = plt.subplots()
-            ax.axis('off')
-            ax.imshow(image)
-
-            rect = patches.Rectangle((xmin, ymin), (xmax-xmin), (ymax-ymin), linewidth=2, edgecolor=box_color[class_index], facecolor='none')
-
-            ax.add_patch(rect)
-            ax.text(xmin, ymin, f"{class_name} [{conf_score:.2f}]", color=text_color[class_index], fontsize=10, ha='left', va='bottom', backgroundcolor=box_color[class_index])
-
-            for k_idx, (kx, ky) in enumerate(kpts_list):
-                ax.plot(kx, ky, 'ro')
-                ax.text(kx, ky, str(k_idx + 1), color='blue', fontsize=10, ha='center', va='center')
-
-            for e in edges_list:
-                start, end = e
-                ax.plot(start, end, 'w-')
-
-            if show_grid:
-                x_g = 0
-                while x_g < (int(H)):
-                    plt.axvline(x=x_g, color="white", linewidth=0.2)
-                    plt.axhline(y=x_g, color="white", linewidth=0.2)
-                    x_g = x_g + int(H/S)
-
-            plt.tight_layout(pad=0)
-
-    if save_path:
-        plt.savefig(save_path)
+    return rendered_images
