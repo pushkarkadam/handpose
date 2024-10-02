@@ -237,8 +237,6 @@ def render_detection(image, head, head_nms, conf_threshold, show_grid=False, sav
             class_index = int(head['class_idx'][0][i])
             class_name = classes[class_index]
             conf_score = float(head['conf_score'][0][i])
-
-            print(class_index)
             
             kpts_list = [(kxn, kyn) for kxn, kyn in zip(kx, ky)]
 
@@ -253,7 +251,7 @@ def render_detection(image, head, head_nms, conf_threshold, show_grid=False, sav
             xmin, ymin, xmax, ymax = (head_nms['boxes'][0] * torch.Tensor([W, H, W, H])).tolist()[i]
 
             fig, ax = plt.subplots()
-
+            ax.axis('off')
             ax.imshow(image)
 
             rect = patches.Rectangle((xmin, ymin), (xmax-xmin), (ymax-ymin), linewidth=2, edgecolor=box_color[class_index], facecolor='none')
@@ -275,6 +273,8 @@ def render_detection(image, head, head_nms, conf_threshold, show_grid=False, sav
                     plt.axvline(x=x_g, color="white", linewidth=0.2)
                     plt.axhline(y=x_g, color="white", linewidth=0.2)
                     x_g = x_g + int(H/S)
+
+            plt.tight_layout(pad=0)
 
     if save_path:
         plt.savefig(save_path)
