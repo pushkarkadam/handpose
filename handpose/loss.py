@@ -216,7 +216,7 @@ def class_loss_mse(classes_truth, classes_pred, obj_conf, lambda_class=1):
     
     return (torch.tensor(lambda_class).to(DEVICE) * loss) / torch.tensor(batch_size).to(DEVICE)
 
-def kpt_loss(kpt_truth, kpt_pred, obj_conf, lambda_kpt=0.5):
+def kpt_loss(kpt_truth, kpt_pred, obj_conf, lambda_kpt=0.5, sum_exp=True):
     r"""Keypoint loss.
 
     Keypoint loss that uses mean square error.
@@ -234,6 +234,9 @@ def kpt_loss(kpt_truth, kpt_pred, obj_conf, lambda_kpt=0.5):
         A torch tensor of size ``(m, 1, S, S)``
     lambda_kpt: float, default ``0.5``
         A multiplier.
+    sum_exp: bool, default ``True``
+        Sums up all the MSE and uses the negative exponent.
+        If not, then uses the formula that takes the exponent of every mse euclidean distance.
 
     Returns
     -------
@@ -256,7 +259,7 @@ def kpt_loss(kpt_truth, kpt_pred, obj_conf, lambda_kpt=0.5):
     
     """
 
-    loss = torch.tensor(0.0).to(DEVICE)
+    d = torch.tensor(0.0).to(DEVICE)
 
     nkpt = int(len(list(kpt_truth.keys())) / 2)
     nkpt_pred = int(len(list(kpt_truth.keys())) / 2)
@@ -284,8 +287,16 @@ def kpt_loss(kpt_truth, kpt_pred, obj_conf, lambda_kpt=0.5):
 
         dx = mse(kx_truth, kx_pred)
         dy = mse(ky_truth, ky_pred)
+        
+        if sum_exp:
+            d += (dx + dy)
+        else:
+            d += torch.exp(-(dx+dy)/ torch.tensor(1).to(DEVICE)) / torch.tensor(nkpt).to(DEVICE)
 
-        loss += torch.tensor(1).to(DEVICE) - torch.exp(-torch.sqrt(((dx + dy) / torch.tensor(2.0).to(DEVICE))+1e-5))
+    if sum_exp:
+        loss = torch.tensor(1).to(DEVICE) - torch.exp(-d)
+    else:
+        loss = torch.tensor(1).to(DEVICE) - d
 
     return (torch.tensor(lambda_kpt).to(DEVICE) * loss) / torch.tensor(batch_size).to(DEVICE)
 

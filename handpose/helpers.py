@@ -311,3 +311,60 @@ def extract_head(best_head, cell_relative=True):
         data['ky'].append(image_ky)
 
     return data
+
+def detect(image, model, require_kpt_conf, S, B, nkpt, nc, iou_threshold):
+    r"""Detects on the input image.
+
+    Performs different operations such as head extraction from the model from the single image input.
+
+    Parameters
+    ----------
+    image: torch.Tensor
+        A torch tensor image of size `(1, 3, H, W)`
+    model: 
+        A CNN model
+    require_kpt_conf: bool
+        Checks whether the keypoint confidence is required.
+    S: int
+        The grid size.
+    B: int
+        The number of prediction boxes.
+    nkpt: int
+        The number of landmarks.
+    nc: int
+        Number of classes to predict.
+    iou_threshold: float
+        The IOU (Intersection Over Union) threshold.
+
+    Returns
+    -------
+    head: dict
+        Head of the prediction
+    head_nms: dict
+        Head dictionary after Non-max suppression.
+        
+    """
+
+    EDGES = [[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[0,9],[9,10],[10,11],[11,12],[0,13],[13,14],[14,15],[15,16],[0,17],[17,18],[18,19],[19,20]]
+
+    image = image.to(DEVICE)
+
+    pred = model(image)
+
+    head = network_head(pred,
+                        require_kpt_conf=require_kpt_conf,
+                        S=S,
+                        B=B,
+                        nkpt=nkpt,
+                        nc=nc
+                       )
+    # activations
+    head = head_activations(head)
+
+    head = best_box(head, iou_threshold=iou_threshold)
+
+    head = extract_head(head)
+
+    head_nms = non_max_suppression(head)
+
+    return head, head_nms

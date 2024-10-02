@@ -17,6 +17,10 @@ Added
 - MSE loss for classes.
 - Euclidean distance for keypoints.
 - Using ``figsize`` as parameter in ``display_images_in_grid()`` function.
+- Updated keypoint loss function.
+- Options to use the exponent of sum of all the mse for keypoints.
+- Detect function added.
+- Render detection function added.
 
 [0.1.11] - 2024-08-04
 ---------------------
