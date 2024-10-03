@@ -6,6 +6,7 @@ from tqdm import tqdm
 import torch.optim as optim
 from torch.optim import lr_scheduler
 import pickle
+import pandas as pd
 
 sys.path.append('../')
 from handpose import *
@@ -33,7 +34,10 @@ def train_model(dataloaders,
                 optimizer='default',
                 learning_rate=0.01,
                 lr_momentum=0.9,
-                scheduler='default'
+                scheduler='default',
+                individual_plots=False,
+                losses_types=["total_loss", "box_loss", "conf_loss", "class_loss", "kpt_loss"],
+                sample_grid_shape=(2,4)
                ):
     r"""Training function.
     
@@ -92,6 +96,10 @@ def train_model(dataloaders,
         is used.
         Otherwise, use `torch.optim` scheduler and directly pass
         it as a parameter.
+    individual_plots: bool, default ``False``
+        Does not store the individual plots.
+    losses_types: list
+        Types of losses given as a list to be the keys of the dictionary.
 
     Returns
     -------
@@ -116,13 +124,9 @@ def train_model(dataloaders,
         # Final model that is saved after the training is complete
         best_model_path = os.path.join(train_path, 'best.pt')
 
-    losses = {"total_loss": [],
-              "box_loss": [],
-              "conf_loss": [],
-              "class_loss": [],
-              "kpt_loss": [],
-              "kpt_conf_loss": []
-             }
+    losses = dict()
+    for loss_type in losses_types:
+        losses[loss_type] = []
 
     valid_losses = copy.deepcopy(losses)
 
@@ -297,10 +301,28 @@ def train_model(dataloaders,
     if save_model_path:
         loss_history = plot_history
 
-        plot_single_history(loss_history, root_path=train_path)
+        if individual_plots:
+            plot_single_history(loss_history, root_path=train_path)
 
-        plot_single_history(mAP_plot_history, root_path=train_path, save_path_prefix='', xlabel='Epoch', ylabel='mAP')
+            plot_single_history(mAP_plot_history, root_path=train_path, save_path_prefix='', xlabel='Epoch', ylabel='mAP')
 
         plot_all_history(loss_history, root_path=train_path)
+
+        # CSV files
+        train_loss_df = pd.DataFrame(plot_history['train'])
+        valid_loss_df = pd.DataFrame(plot_history['valid'])
+
+        train_loss_df.to_csv(os.path.join(train_path, 'train_loss.csv'), index=False)
+        valid_loss_df.to_csv(os.path.join(train_path, 'valid_loss.csv'), index=False)
+
+        # Save sample images
+        save_sample_images(images, 
+                       data, 
+                       truth_data_nms, 
+                       pred_data, 
+                       pred_data_nms,
+                       train_path,
+                       sample_grid_shape
+                      )
       
     return history

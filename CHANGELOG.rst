@@ -21,6 +21,9 @@ Added
 - Options to use the exponent of sum of all the mse for keypoints.
 - Detect function added.
 - Render detection function added.
+- CSV files saving for losses added in training.
+- Options to include the loss types in training.
+- Saving sample rendered images for truth and prediction.
 
 [0.1.11] - 2024-08-04
 ---------------------
