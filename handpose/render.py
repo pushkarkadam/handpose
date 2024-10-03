@@ -313,7 +313,7 @@ def save_sample_images(images,
                                         box_color={0: "red", 1: "orange"}
                                        )
 
-    display_images_in_grid(truth_rendered_images, save_path=os.path.join(train_path, "truth_sample.png"))
+    display_images_in_grid(truth_rendered_images, grid_shape=sample_grid_shape, save_path=os.path.join(train_path, "truth_sample.png"))
 
     pred_rendered_images = render_detection(images, 
                                             pred_data, 
@@ -323,4 +323,4 @@ def save_sample_images(images,
                                             classes={0: "Right", 1: "Left"}, 
                                             box_color={0: "red", 1: "orange"}
                                            )
-    display_images_in_grid(pred_rendered_images, save_path=os.path.join(train_path, "pred_sample.png"))
+    display_images_in_grid(pred_rendered_images, grid_shape=sample_grid_shape, save_path=os.path.join(train_path, "pred_sample.png"))
