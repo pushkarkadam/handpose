@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from PIL import Image
+import os
 
 
 def render_pose(images, head, is_relative=True, show_keypoint_label=True, classes={0: "Right", 1:"Left"}, box_color={0: "red", 1:"orange"}, text_color={0: "white", 1:"white"}):
@@ -293,3 +294,33 @@ def render_detection(images,
                 plt.close(fig)
 
     return rendered_images
+
+def save_sample_images(images, 
+                       truth_head, 
+                       truth_data_nms, 
+                       pred_data, 
+                       pred_data_nms,
+                       train_path,
+                       sample_grid_shape
+                      ):
+    """Saves the sample images in the training directory"""
+
+    truth_rendered_images = render_pose(images, 
+                                        truth_head, 
+                                        is_relative=True,
+                                        show_keypoint_label=True,
+                                        classes={0: "Right", 1: "Left"}, 
+                                        box_color={0: "red", 1: "orange"}
+                                       )
+
+    display_images_in_grid(truth_rendered_images, save_path=os.path.join(train_path, "truth_sample.png"))
+
+    pred_rendered_images = render_detection(images, 
+                                            pred_data, 
+                                            pred_data_nms,
+                                            conf_threshold=0.5, 
+                                            show_grid=False, 
+                                            classes={0: "Right", 1: "Left"}, 
+                                            box_color={0: "red", 1: "orange"}
+                                           )
+    display_images_in_grid(pred_rendered_images, save_path=os.path.join(train_path, "pred_sample.png"))

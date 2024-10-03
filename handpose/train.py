@@ -36,7 +36,8 @@ def train_model(dataloaders,
                 lr_momentum=0.9,
                 scheduler='default',
                 individual_plots=False,
-                losses_types=["total_loss", "box_loss", "conf_loss", "class_loss", "kpt_loss"]
+                losses_types=["total_loss", "box_loss", "conf_loss", "class_loss", "kpt_loss"],
+                sample_grid_shape=(2,4)
                ):
     r"""Training function.
     
@@ -313,5 +314,15 @@ def train_model(dataloaders,
 
         train_loss_df.to_csv(os.path.join(train_path, 'train_loss.csv'), index=False)
         valid_loss_df.to_csv(os.path.join(train_path, 'valid_loss.csv'), index=False)
+
+        # Save sample images
+        save_sample_images(images, 
+                       data, 
+                       truth_data_nms, 
+                       pred_data, 
+                       pred_data_nms,
+                       train_path,
+                       sample_grid_shape
+                      )
       
     return history
