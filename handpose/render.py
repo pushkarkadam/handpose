@@ -237,18 +237,18 @@ def render_detection(images,
     
         # rendering the detected objects
         for i in range(pred_count):
-            if head['conf_score'][0][i] > conf_threshold:
-                x = head['x'][0][i] * W
-                y = head['y'][0][i] * H
-                w = head['w'][0][i] * W
-                h = head['h'][0][i] * H
+            if head['conf_score'][idx][i] > conf_threshold:
+                x = head['x'][idx][i] * W
+                y = head['y'][idx][i] * H
+                w = head['w'][idx][i] * W
+                h = head['h'][idx][i] * H
     
-                kx = (torch.Tensor(head['kx'][0][i]) * torch.tensor(W)).tolist()
-                ky = (torch.Tensor(head['ky'][0][i]) * torch.tensor(H)).tolist()
+                kx = (torch.Tensor(head['kx'][idx][i]) * torch.tensor(W)).tolist()
+                ky = (torch.Tensor(head['ky'][idx][i]) * torch.tensor(H)).tolist()
     
-                class_index = int(head['class_idx'][0][i])
+                class_index = int(head['class_idx'][idx][i])
                 class_name = classes[class_index]
-                conf_score = float(head['conf_score'][0][i])
+                conf_score = float(head['conf_score'][idx][i])
                 
                 kpts_list = [(kxn, kyn) for kxn, kyn in zip(kx, ky)]
     
@@ -260,9 +260,10 @@ def render_detection(images,
                     end_point = kpts_list[end_idx]
                     edges_list.append([[start_point[0], end_point[0]], [start_point[1], end_point[1]]])
     
-                xmin, ymin, xmax, ymax = (head_nms['boxes'][0] * torch.Tensor([W, H, W, H])).tolist()[i]
+                xmin, ymin, xmax, ymax = (head_nms['boxes'][idx] * torch.Tensor([W, H, W, H])).tolist()[i]
     
                 fig, ax = plt.subplots(figsize=(W / 100, H / 100))
+
                 ax.axis('off')
                 ax.imshow(image)
     
