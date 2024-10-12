@@ -325,3 +325,27 @@ def pr_curve(truth, pred, iou_threshold=0.5):
     recall_curve = TP.cumsum() / num_true_det
 
     return prec_curve, recall_curve
+
+def average_precision(prec_curve, recall_curve, show_plot=False):
+
+    precision = prec_curve[-1]
+    recall = recall_curve[-1]
+    
+    prec_curve = np.concatenate((np.array([1]), prec_curve, np.array([0])))
+    recall_curve = np.concatenate((np.array([0]), recall_curve, np.array([1])))
+
+    F_score = (2 * precision * recall) / (precision + recall)
+    
+    x = np.linspace(0, 1, 101)
+    AP = np.trapz(prec_curve, recall_curve, x)
+
+    if show_plot:
+        plt.plot(recall_curve, prec_curve, 'r*-')
+        plt.xlabel('Recall')
+        plt.ylabel('Precision')
+        plt.xlim(0,1.1)
+        plt.ylim(0,1.1)
+        plt.grid()
+        plt.show()
+    
+    return AP, precision, recall, F_score
