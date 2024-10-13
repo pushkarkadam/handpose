@@ -284,10 +284,6 @@ def train_model(dataloaders,
 
     if save_model_path:
         torch.save(model.state_dict(), best_model_path)
-        # with open(os.path.join(train_path, 'all_losses.pickle'), 'wb') as handle:
-        #     pickle.dump(all_losses, handle, protocol=pickle.HIGHEST_PROTOCOL)
-        # with open(os.path.join(train_path, 'mAP.pickle'), 'wb') as handle:
-        #     pickle.dump(epochs_mAP, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     history = {'model': model,
                'all_losses': all_losses,
