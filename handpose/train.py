@@ -150,7 +150,11 @@ def train_model(dataloaders,
     
     for epoch in tqdm(range(num_epochs), unit='batch', total=num_epochs):
         if verbose:
+            print('\n\n')
+            print('=' * len(f"Epoch: {epoch + 1}"))
             print(f'Epoch: {epoch + 1}')
+            print('=' * len(f"Epoch: {epoch + 1}"))
+        
         for phase in ['train', 'valid']:
 
             # Running losses
@@ -236,12 +240,12 @@ def train_model(dataloaders,
                                 }
 
                     # Evaluation metric
-                    eval_metric = mean_average_precision(pred_map, truth_map, iou_threshold, num_classes=nc)
+                    mAP_class, prec_class_epoch, recall_class_epoch, F_score_class_epoch  = mean_average_precision(truth_map, pred_map, iou_threshold)
 
                 for k in running_losses:
                     running_losses[k] += phase_losses[k].item() * current_batch_size
 
-                mAP += eval_metric['mAP'] 
+                mAP += mAP_class
 
             if phase == 'train':
                 scheduler.step()
@@ -263,6 +267,11 @@ def train_model(dataloaders,
                     print(f'{k}: {v:.3f}')
                 print("\n")
 
+                # printing mAP
+                print("Metrics")
+                print('-' * len("Metrics"))
+                print(f"mAP: {mAP_epoch}")
+
             if save_model_path:
                 if not os.path.exists(train_path):
                     os.makedirs(train_path)
@@ -275,10 +284,6 @@ def train_model(dataloaders,
 
     if save_model_path:
         torch.save(model.state_dict(), best_model_path)
-        with open(os.path.join(train_path, 'all_losses.pickle'), 'wb') as handle:
-            pickle.dump(all_losses, handle, protocol=pickle.HIGHEST_PROTOCOL)
-        with open(os.path.join(train_path, 'mAP.pickle'), 'wb') as handle:
-            pickle.dump(epochs_mAP, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     history = {'model': model,
                'all_losses': all_losses,
