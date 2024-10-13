@@ -24,10 +24,18 @@ Added
 - CSV files saving for losses added in training.
 - Options to include the loss types in training.
 - Saving sample rendered images for truth and prediction.
+- Average Precision calculation function.
+- Precision and Recall curve function.
+- Mean average precision function also returns precision, recall, and F score for class.
 
 Fixed
 ^^^^^
 - Mean Average Precision calculation fixed.
+
+Removed
+-------
+- Saving dictionary of results.
+- Confusion matrix for each batch size.
 
 [0.1.11] - 2024-08-04
 ---------------------
