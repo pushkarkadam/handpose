@@ -1,6 +1,7 @@
 import sys 
 import torch 
 import pytest 
+import numpy as np
 
 sys.path.append('../')
 
@@ -102,100 +103,20 @@ def test_non_max_suppression():
     torch.testing.assert_close(nms_boxes['nms_box_indices'][0], torch.Tensor([0]).type(torch.int64))
     torch.testing.assert_close(nms_boxes['boxes'][0], torch.Tensor([[0.25, 0.25, 0.75, 0.75]]))
 
-def test_mean_average_precision1():
-    """Tests mean_average_precision()"""
-
+def get_metrics_eval_values():
+    """Function that returns the required truth and pred dict for testing"""
     truth_boxes = [
-        torch.tensor([[0.25, 0.25, 0.75, 0.75]], dtype=torch.float32),
-        torch.tensor([[0.25, 0.25, 0.75, 0.75]], dtype=torch.float32)
+    torch.tensor([[0.25, 0.25, 0.75, 0.75]], dtype=torch.float32),
+    torch.tensor([[0.25, 0.25, 0.75, 0.75]], dtype=torch.float32),
+    torch.tensor([[0.25, 0.25, 0.75, 0.75]], dtype=torch.float32),
+    torch.tensor([[0.25, 0.25, 0.75, 0.75]], dtype=torch.float32),
     ]
 
     truth_labels = [
         [torch.tensor(0)],
-        [torch.tensor(1)]
-    ]
-
-    truth = {'boxes': truth_boxes,
-            'labels': truth_labels
-            }
-
-    pred_boxes = [
-        torch.tensor([[0.25, 0.25, 0.75, 0.75]], dtype=torch.float32),
-        []
-    ]
-
-    pred_score = [
-        [torch.tensor(0.8)],
-        []
-    ]
-
-    pred_labels = [
-        [torch.tensor(0)],
-        []
-    ]
-
-    pred = {'conf_score': pred_score,
-            'labels': pred_labels,
-            'boxes': pred_boxes
-        }
-
-    result = handpose.metrics.mean_average_precision(pred, truth, iou_threshold=0.5, num_classes=2)
-
-    assert(result['mAP'] == 0.5)
-    torch.testing.assert_close(result['confusion_matrix'], torch.tensor([[1,0],[0,0]], dtype=torch.int32))
-
-def test_mean_average_precision2():
-    """Tests mean_average_precision()"""
-
-    truth_boxes = [
-        torch.tensor([[0.25, 0.25, 0.75, 0.75]], dtype=torch.float32),
-        torch.tensor([[0.25, 0.25, 0.75, 0.75]], dtype=torch.float32)
-    ]
-
-    truth_labels = [
-        [torch.tensor(0)],
-        [torch.tensor(1)]
-    ]
-
-    truth = {'boxes': truth_boxes,
-            'labels': truth_labels
-            }
-
-    pred_boxes = [
-        torch.tensor([[0.25, 0.25, 0.75, 0.75]], dtype=torch.float32),
-        []
-    ]
-
-    pred_score = [
-        [torch.tensor(0.8)],
-        []
-    ]
-
-    pred_labels = [
         [torch.tensor(1)],
-        []
-    ]
-
-    pred = {'conf_score': pred_score,
-            'labels': pred_labels,
-            'boxes': pred_boxes
-        }
-
-    result = handpose.metrics.mean_average_precision(pred, truth, iou_threshold=0.5, num_classes=2)
-
-    assert(result['mAP'] == 0.0)
-    torch.testing.assert_close(result['confusion_matrix'], torch.tensor([[0,1],[0,0]], dtype=torch.int32))
-
-def test_mean_average_precision3():
-    """Tests mean_average_precision()"""
-    truth_boxes = [
-        torch.tensor([[0.25, 0.25, 0.75, 0.75]], dtype=torch.float32),
-        torch.tensor([[0.25, 0.25, 0.75, 0.75]], dtype=torch.float32)
-    ]
-
-    truth_labels = [
         [torch.tensor(0)],
-        [torch.tensor(1)]
+        [torch.tensor(1)],
     ]
 
     truth = {'boxes': truth_boxes,
@@ -203,26 +124,68 @@ def test_mean_average_precision3():
             }
 
     pred_boxes = [
-        torch.tensor([[0.25, 0.25, 0.75, 0.75], [0.25, 0.25, 0.75, 0.75]], dtype=torch.float32),
-        []
+        torch.tensor([[0.1, 0.1, 0.2, 0.2], [0.25, 0.25, 0.75, 0.75]], dtype=torch.float32),
+        [],
+        torch.tensor([[0.1, 0.1, 0.2, 0.2]], dtype=torch.float32),
+        torch.tensor([[0.24, 0.24, 0.76, 0.76]], dtype=torch.float32),
     ]
 
     pred_score = [
-        [torch.tensor(0.8), torch.tensor(0.4)],
-        []
+        [torch.tensor(0.4), torch.tensor(0.8)],
+        [],
+        [torch.tensor(0.6)],
+        [torch.tensor(0.5)]
     ]
 
     pred_labels = [
-        [torch.tensor(0), torch.tensor(1)],
-        []
+        [torch.tensor(0), torch.tensor(0)],
+        [],
+        [torch.tensor(0)],
+        [torch.tensor(1)]
     ]
 
     pred = {'conf_score': pred_score,
             'labels': pred_labels,
             'boxes': pred_boxes
         }
+    
+    return truth, pred
 
-    result = handpose.metrics.mean_average_precision(pred, truth, iou_threshold=0.5, num_classes=2)
+def test_pr_curve():
+    """Tests pr_curve function"""
 
-    assert(result['mAP'] == 0.5)
-    torch.testing.assert_close(result['confusion_matrix'], torch.tensor([[1,1],[0,0]], dtype=torch.int32))
+    truth, pred = get_metrics_eval_values()
+    
+    prec_curve, recall_curve = handpose.metrics.pr_curve(truth, pred, 0.5)
+
+    assert(isinstance(prec_curve, np.ndarray))
+    assert(isinstance(recall_curve, np.ndarray))
+    
+    # | actual - expected | <= atol + rtol * |expected|
+    torch.testing.assert_close(torch.Tensor(prec_curve), torch.Tensor([1.0, 1.0, 0.66, 0.5, 0.4]), rtol=1e-2, atol=1e-2)
+
+def test_average_precision():
+    """Test for average_precision()"""
+
+    truth, pred = get_metrics_eval_values()
+
+    prec_curve, recall_curve = handpose.metrics.pr_curve(truth, pred, 0.5)
+
+    AP, precision, recall, F_score = handpose.metrics.average_precision(prec_curve, recall_curve)
+
+    torch.testing.assert_close(torch.tensor(AP), torch.tensor(0.6, dtype=torch.float64), rtol=1e-2, atol=1e-2)
+    torch.testing.assert_close(torch.tensor(precision), torch.tensor(0.4, dtype=torch.float64), rtol=1e-2, atol=1e-2)
+    torch.testing.assert_close(torch.tensor(recall), torch.tensor(0.5, dtype=torch.float64), rtol=1e-2, atol=1e-2)
+    torch.testing.assert_close(torch.tensor(F_score), torch.tensor(0.44, dtype=torch.float64), rtol=1e-2, atol=1e-2)
+
+def test_mean_average_precision():
+    """Test for mean_average_precision()"""
+
+    truth, pred = get_metrics_eval_values()
+
+    mAP, precision_class, recall_class, F_score_class = handpose.metrics.mean_average_precision(truth, pred, 0.5)
+
+    torch.testing.assert_close(torch.tensor(mAP), torch.tensor(0.6, dtype=torch.float64), rtol=1e-1, atol=1e-1)
+    torch.testing.assert_close(torch.Tensor(precision_class), torch.Tensor([0.3, 0.5]), rtol=1e-1, atol=1e-1)
+    torch.testing.assert_close(torch.Tensor(recall_class), torch.Tensor([0.5, 0.5]), rtol=1e-1, atol=1e-1)
+    torch.testing.assert_close(torch.Tensor(F_score_class), torch.Tensor([0.4, 0.5]), rtol=1e-1, atol=1e-1)
