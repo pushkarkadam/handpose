@@ -25,6 +25,10 @@ Added
 - Options to include the loss types in training.
 - Saving sample rendered images for truth and prediction.
 
+Fixed
+^^^^^
+- Mean Average Precision calculation fixed.
+
 [0.1.11] - 2024-08-04
 ---------------------
 
