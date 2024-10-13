@@ -228,7 +228,7 @@ def average_precision(prec_curve, recall_curve, show_plot=False):
     prec_curve = np.concatenate((np.array([1]), prec_curve, np.array([0])))
     recall_curve = np.concatenate((np.array([0]), recall_curve, np.array([1])))
 
-    F_score = (2 * precision * recall) / (precision + recall)
+    F_score = (2 * precision * recall) / (precision + recall + 1e-6)
     
     x = np.linspace(0, 1, 101)
     AP = np.trapz(prec_curve, recall_curve, x)
