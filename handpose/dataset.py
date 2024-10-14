@@ -522,3 +522,66 @@ def box_ratio(label_dir):
         mean_ratio = torch.mean(torch.Tensor(ratio))
 
     return mean_ratio
+
+def get_dataloaders(data_dir,
+                    S,
+                    nc,
+                    nkpt,
+                    cell_relative,
+                    require_kpt_conf,
+                    batch_size,
+                    shuffle_data,
+                    num_workers,
+                    drop_last
+                   ):
+    r"""Returns Dataloaders.
+    
+    Parameters
+    ----------
+    data_dir: str
+        Path to data directory. Example: ``'../data/dev'``
+    S: int
+        Grid size.
+    nc: int
+        Number of classes.
+    nkpt: int
+        Number of keypoints.
+    cell_relative: bool
+        Boolean for using cell relative coordinates.
+    require_kpt_conf: bool
+        Boolean for using keypoint confidence.
+    batch_size: int
+        Batch size for train and valid dataset.
+    shuffle_data: bool
+        Boolean to shuffle the data.
+    num_workers: int
+        Number of threads used for training.
+    drop_last: bool
+        Boolean to drop the remaining data while mini-batch training.
+
+    Returns
+    -------
+    tuple
+        A tuple of data loaders and dataset size
+    
+    """
+
+    image_datasets = {x: HandDataset(img_dir=os.path.join(data_dir, x, 'images'),
+                                     label_dir=os.path.join(data_dir, x, 'labels'),
+                                     S=S,
+                                     nc=nc,
+                                     nkpt=nkpt,
+                                     cell_relative=cell_relative,
+                                     require_kpt_conf=require_kpt_conf
+                                    ) for x in ['train', 'valid']}
+
+    dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], 
+                                                  batch_size=batch_size, 
+                                                  shuffle=shuffle_data, 
+                                                  num_workers=num_workers, 
+                                                  drop_last=drop_last
+                                                 ) for x in ['train', 'valid']}
+
+    dataset_sizes = {x: len(image_datasets[x]) for x in ['train', 'valid']}
+
+    return dataloaders, dataset_sizes

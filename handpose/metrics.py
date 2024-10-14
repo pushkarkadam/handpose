@@ -2,6 +2,7 @@ import torch
 from handpose.helpers import *
 import torchvision
 from torchvision.ops import box_iou
+import numpy as np
 
 
 def intersection_over_union(box1, box2, minimum=1e-6):
@@ -152,109 +153,142 @@ def non_max_suppression(data, iou_threshold=0.5):
             "ky": ky
            }
 
-def mean_average_precision(pred, truth, iou_threshold=0.5, num_classes=1):
-    """
-    Calculate Mean Average Precision (mAP) and confusion matrix for object detection.
+def pr_curve(truth, pred, iou_threshold=0.5):
+    """Returns precision and recall curve values.
 
     Parameters
     ----------
-    pred: dict
-        A dictionary of prediction with keys ``['conf_score', 'labels', 'boxes']``
     truth: dict
-        A dictionary of truth with keys ``['conf_score', 'labels', 'boxes']``
-    iou_threshold : float, default=0.5
-        IoU threshold to consider a prediction as true positive.
-    num_classes : int, default=1
-        Number of object classes.
+        A dictionary of truth values
+    pred: dict
+        A dictionary of predicted values
+    iou_threshold: float, default ``0.5``
+        Intersection over union (IOU) threshold.
 
     Returns
     -------
-    dict
-        Dictionary containing mAP and confusion matrix.
-    """
-    pred_boxes = pred['boxes']
-    pred_scores = pred['conf_score']
-    pred_labels = pred['labels']
-    true_boxes = truth['boxes']
-    true_labels = truth['labels']
+    tuple
+        A tuple of precision and recall values.
     
-    average_precisions = []
-    confusion_matrix = torch.zeros((num_classes, num_classes), dtype=torch.int32)
+    """
 
-    for c in range(num_classes):
-        true_positives = []
-        false_positives = []
-        num_true_objects = 0
+    if type(truth) == dict and type(pred) == dict:
+        pred_boxes = pred['boxes']
+        true_boxes = truth['boxes']
+    else:
+        pred_boxes = pred
+        true_boxes = truth
 
-        for pred_box, pred_score, pred_label, true_box, true_label in zip(pred_boxes, pred_scores, pred_labels, true_boxes, true_labels):
-            if len(pred_box) == 0:
-                continue
-
-            # Convert list of tensors to a single tensor
-            pred_label = torch.tensor([label.item() for label in pred_label])
-            true_label = torch.tensor([label.item() for label in true_label])
-
-            num_true_objects += (true_label == c).sum().item()
-            detected = []
-
-            for i, box in enumerate(pred_box):
-                if pred_label[i] != c:
-                    continue
-
-                if true_box.numel() == 0:
-                    false_positives.append(1)
-                    true_positives.append(0)
-                    continue
-                
-                ious = box_iou(box.unsqueeze(0), true_box)
-                max_iou, max_index = ious.max(1)
-
-                if max_iou >= iou_threshold and max_index not in detected and true_label[max_index] == c:
-                    true_positives.append(1)
-                    false_positives.append(0)
-                    detected.append(max_index)
-                else:
-                    false_positives.append(0)
-                    true_positives.append(0)
-
-            # Update confusion matrix
-            for i, box in enumerate(pred_box):
-                pred_class = pred_label[i].item()
-                if pred_class != c:
-                    continue
-                if i in detected:
-                    confusion_matrix[c, c] += 1
-                else:
-                    if len(true_label) > 0:
-                        true_class = true_label[max_index].item()
-                        confusion_matrix[true_class, pred_class] += 1
-                    else:
-                        confusion_matrix[0, pred_class] += 1
-
-        if len(true_positives) == 0:
-            average_precisions.append(0)
+    TP = []
+    FP = []
+    conf = []
+    num_true_det = len(true_boxes)
+    
+    for pred_box, true_box in zip(pred_boxes, true_boxes):
+        # Checking if there was no detection
+        if type(pred_box) == list:
+            # For no detection, appending confidence as 0
+            conf.append(0.0)
+            FP.append(True)
+            TP.append(False)
             continue
+        for det in pred_box:
+            # Calculating the iou score as the confidence
+            iou_score = box_iou(det.unsqueeze(0), true_box)
+            
+            # Appending the iou score as the confidence
+            conf.append(iou_score.item())
 
-        true_positives = torch.tensor(true_positives)
-        false_positives = torch.tensor(false_positives)
+            if iou_score >= iou_threshold:
+                TP.append(True)
+                FP.append(False)
+            else:
+                FP.append(True)
+                TP.append(False)
 
-        true_positives = torch.cumsum(true_positives, dim=0)
-        false_positives = torch.cumsum(false_positives, dim=0)
+    # Sorting the confidence index in descending order
+    conf_index = np.flip(np.array(conf).argsort())
+    conf = np.array(conf)[conf_index]
+    TP = np.array(TP)[conf_index]
+    FP = np.array(FP)[conf_index]
 
-        precisions = true_positives / (true_positives + false_positives + 1e-16)
-        recalls = true_positives / (num_true_objects + 1e-16)
+    # precision curve
+    prec_curve = TP.cumsum() / (TP.cumsum() + FP.cumsum())
 
-        precisions = torch.cat((torch.tensor([0]), precisions))
-        recalls = torch.cat((torch.tensor([0]), recalls))
+    # recall curve
+    recall_curve = TP.cumsum() / num_true_det
 
-        for i in range(len(precisions) - 1, 0, -1):
-            precisions[i - 1] = torch.max(precisions[i - 1], precisions[i])
+    return prec_curve, recall_curve
 
-        indices = torch.where(recalls[1:] != recalls[:-1])[0]
-        average_precision = torch.sum((recalls[indices + 1] - recalls[indices]) * precisions[indices + 1])
-        average_precisions.append(average_precision.item())
+def average_precision(prec_curve, recall_curve, show_plot=False):
 
-    return {
-        'mAP': sum(average_precisions) / num_classes,
-        'confusion_matrix': confusion_matrix
-    }
+    precision = prec_curve[-1]
+    recall = recall_curve[-1]
+    
+    prec_curve = np.concatenate((np.array([1]), prec_curve, np.array([0])))
+    recall_curve = np.concatenate((np.array([0]), recall_curve, np.array([1])))
+
+    F_score = (2 * precision * recall) / (precision + recall + 1e-6)
+    
+    x = np.linspace(0, 1, 101)
+    AP = np.trapz(prec_curve, recall_curve, x)
+
+    if show_plot:
+        plt.plot(recall_curve, prec_curve, 'r*-')
+        plt.xlabel('Recall')
+        plt.ylabel('Precision')
+        plt.xlim(0,1.1)
+        plt.ylim(0,1.1)
+        plt.grid()
+        plt.show()
+    
+    return AP, precision, recall, F_score
+
+def mean_average_precision(truth, pred, iou_threshold, show_plot=False):
+    """Returns mean average precision, class precision, class recall and class F score.
+
+    truth: dict
+        A dictionary of truth values.
+    pred: dict
+        A dictionary of predicted values.
+    iou_threshold: float
+        Intersection over union (IOU) threshold.
+    show_plot: bool, default ``False``.
+        Shows the PR plot.
+
+    Returns
+    -------
+    tuple
+        A tuple of mAP, class precision, class recall, and class F score.
+    
+    """
+    true_labels = []
+    AP_class = []
+    precision_class = []
+    recall_class = []
+    F_score_class = []
+
+    for i in truth['labels']:
+        for true_det in i:
+            true_labels.append(true_det.item())
+    
+    true_labels = np.array(true_labels)
+
+    classes = np.unique(true_labels)
+
+    for c in classes:
+        class_index = np.where(true_labels == c)[0]
+        true_boxes = list(torch.tensor(np.array(truth['boxes'])[class_index]))
+        pred_boxes = [pred['boxes'][i] for i in class_index]
+
+        prec_curve, recall_curve = pr_curve(true_boxes, pred_boxes, iou_threshold)
+        AP, precision, recall, F_score = average_precision(prec_curve, recall_curve, show_plot=show_plot)
+
+        AP_class.append(AP)
+        precision_class.append(precision)
+        recall_class.append(recall)
+        F_score_class.append(F_score)
+
+    mAP = np.mean(AP_class)
+
+    return mAP, precision_class, recall_class, F_score_class

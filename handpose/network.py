@@ -1,4 +1,5 @@
 import torch
+from torch import nn
 from torchsummary import summary
 
 
@@ -317,3 +318,65 @@ def head_activations(head):
                 'classes': classes
                }
     return head_act
+
+class YOLOv1(nn.Module):
+    def __init__(self, S, B, nkpt, nkpt_dim, nc):
+        super(YOLOv1, self).__init__()
+
+        output_tensor_dim = S * S * (B * (5 + nkpt_dim * nkpt) + nc)
+
+        self.layers = nn.Sequential(
+            nn.Conv2d(in_channels=3, out_channels=64, kernel_size=7, stride=2, padding=3),
+            nn.LeakyReLU(0.1),
+            nn.MaxPool2d(kernel_size=2,stride=2,padding=0),
+            
+            nn.Conv2d(64, 192, 3, 1, 1),
+            nn.LeakyReLU(0.1),
+            nn.MaxPool2d(2, 2, 0),
+
+            nn.Conv2d(192, 128, 1, 1, 0),
+            nn.Conv2d(128, 256, 3, 1, 1),
+            nn.Conv2d(256, 256, 1, 1, 0),
+            nn.Conv2d(256, 512, 3, 1, 1),
+            nn.MaxPool2d(2, 2, 0),
+
+            # 4x conv combo START: repeating conv layers
+            nn.Conv2d(512, 256, 1, 1, 0), # 1
+            nn.Conv2d(256, 512, 1, 1, 0),
+
+            nn.Conv2d(512, 256, 1, 1, 0), # 2
+            nn.Conv2d(256, 512, 1, 1, 0),
+
+            nn.Conv2d(512, 256, 1, 1, 0), # 3
+            nn.Conv2d(256, 512, 1, 1, 0),
+
+            nn.Conv2d(512, 256, 1, 1, 0), # 4
+            nn.Conv2d(256, 512, 1, 1, 0),
+
+            # 4x END
+
+            nn.Conv2d(512, 512, 1, 1, 0),
+            nn.Conv2d(512, 1024, 1, 1, 0),
+            nn.MaxPool2d(2, 2, 0),
+
+            # 2x conv combo START:
+            nn.Conv2d(1024, 512, 1, 1, 0), # 1
+            nn.Conv2d(512, 1024, 3, 1, 1),
+
+            nn.Conv2d(1024, 512, 1, 1, 0), # 1
+            nn.Conv2d(512, 1024, 3, 1, 1),
+            # 2x END
+
+            nn.Conv2d(1024, 1024, 3, 1, 1),
+            nn.Conv2d(1024, 1024, 3, 1, 1),
+
+            nn.Flatten(),
+
+            nn.Linear(in_features=7*7*1024, out_features=4096),
+
+            nn.Linear(in_features=4096, out_features=output_tensor_dim)
+        )
+
+    def forward(self, x):
+        output = self.layers(x)
+        return output

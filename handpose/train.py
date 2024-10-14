@@ -6,6 +6,7 @@ from tqdm import tqdm
 import torch.optim as optim
 from torch.optim import lr_scheduler
 import pickle
+import pandas as pd
 
 sys.path.append('../')
 from handpose import *
@@ -33,7 +34,10 @@ def train_model(dataloaders,
                 optimizer='default',
                 learning_rate=0.01,
                 lr_momentum=0.9,
-                scheduler='default'
+                scheduler='default',
+                individual_plots=False,
+                losses_types=["total_loss", "box_loss", "conf_loss", "class_loss", "kpt_loss"],
+                sample_grid_shape=(2,4)
                ):
     r"""Training function.
     
@@ -92,6 +96,10 @@ def train_model(dataloaders,
         is used.
         Otherwise, use `torch.optim` scheduler and directly pass
         it as a parameter.
+    individual_plots: bool, default ``False``
+        Does not store the individual plots.
+    losses_types: list
+        Types of losses given as a list to be the keys of the dictionary.
 
     Returns
     -------
@@ -116,13 +124,9 @@ def train_model(dataloaders,
         # Final model that is saved after the training is complete
         best_model_path = os.path.join(train_path, 'best.pt')
 
-    losses = {"total_loss": [],
-              "box_loss": [],
-              "conf_loss": [],
-              "class_loss": [],
-              "kpt_loss": [],
-              "kpt_conf_loss": []
-             }
+    losses = dict()
+    for loss_type in losses_types:
+        losses[loss_type] = []
 
     valid_losses = copy.deepcopy(losses)
 
@@ -146,7 +150,11 @@ def train_model(dataloaders,
     
     for epoch in tqdm(range(num_epochs), unit='batch', total=num_epochs):
         if verbose:
+            print('\n\n')
+            print('=' * len(f"Epoch: {epoch + 1}"))
             print(f'Epoch: {epoch + 1}')
+            print('=' * len(f"Epoch: {epoch + 1}"))
+        
         for phase in ['train', 'valid']:
 
             # Running losses
@@ -232,12 +240,12 @@ def train_model(dataloaders,
                                 }
 
                     # Evaluation metric
-                    eval_metric = mean_average_precision(pred_map, truth_map, iou_threshold, num_classes=nc)
+                    mAP_class, prec_class_epoch, recall_class_epoch, F_score_class_epoch  = mean_average_precision(truth_map, pred_map, iou_threshold)
 
                 for k in running_losses:
                     running_losses[k] += phase_losses[k].item() * current_batch_size
 
-                mAP += eval_metric['mAP'] 
+                mAP += mAP_class
 
             if phase == 'train':
                 scheduler.step()
@@ -259,6 +267,11 @@ def train_model(dataloaders,
                     print(f'{k}: {v:.3f}')
                 print("\n")
 
+                # printing mAP
+                print("Metrics")
+                print('-' * len("Metrics"))
+                print(f"mAP: {mAP_epoch}")
+
             if save_model_path:
                 if not os.path.exists(train_path):
                     os.makedirs(train_path)
@@ -271,10 +284,6 @@ def train_model(dataloaders,
 
     if save_model_path:
         torch.save(model.state_dict(), best_model_path)
-        with open(os.path.join(train_path, 'all_losses.pickle'), 'wb') as handle:
-            pickle.dump(all_losses, handle, protocol=pickle.HIGHEST_PROTOCOL)
-        with open(os.path.join(train_path, 'mAP.pickle'), 'wb') as handle:
-            pickle.dump(epochs_mAP, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     history = {'model': model,
                'all_losses': all_losses,
@@ -297,10 +306,138 @@ def train_model(dataloaders,
     if save_model_path:
         loss_history = plot_history
 
-        plot_single_history(loss_history, root_path=train_path)
+        if individual_plots:
+            plot_single_history(loss_history, root_path=train_path)
 
-        plot_single_history(mAP_plot_history, root_path=train_path, save_path_prefix='', xlabel='Epoch', ylabel='mAP')
+            plot_single_history(mAP_plot_history, root_path=train_path, save_path_prefix='', xlabel='Epoch', ylabel='mAP')
 
         plot_all_history(loss_history, root_path=train_path)
+
+        # CSV files
+        train_loss_df = pd.DataFrame(plot_history['train'])
+        valid_loss_df = pd.DataFrame(plot_history['valid'])
+
+        train_loss_df.to_csv(os.path.join(train_path, 'train_loss.csv'), index=False)
+        valid_loss_df.to_csv(os.path.join(train_path, 'valid_loss.csv'), index=False)
+
+        # Save sample images
+        save_sample_images(images, 
+                       data, 
+                       truth_data_nms, 
+                       pred_data, 
+                       pred_data_nms,
+                       train_path,
+                       sample_grid_shape
+                      )
       
     return history
+
+def train_network(config, verbose=True):
+    r"""Sets up the job using the parameters in the config file.
+    
+    This is the overall train function that does the job of setting up the dataloders and the computer settings
+    to run the training programme.
+
+    The results are stored in the directory mentioned in the config file.
+    This function is different from
+    :func:`handpose.train.train_model`
+    in a way that ``train_model()`` does not setup the job.
+    
+    Parameters
+    ----------
+    config: str
+        Path to config yaml file. Example: ``'~/path/to/config.yaml'``
+    verbose: bool, default ``True``.
+        Prints the training output.
+
+    """
+
+    config = load_variables('config.yaml')
+
+    try:
+        REPO = config['REPO']
+        S = config['S']
+        B = config['B']
+        nkpt = config['nkpt']
+        nkpt_dim = config['nkpt_dim']
+        nc = config['nc']
+        batch_size = config['batch_size']
+        cell_relative = config['cell_relative']
+        input_size = tuple(config['input_size'])
+        require_kpt_conf = config['require_kpt_conf']
+        weights = config['weights']
+        model_name = config['model_name']
+        freeze_weights = config['freeze_weights']
+        data_dir = config['data_dir']
+        save_model_path = config['save_model_path']
+        num_epochs = config['num_epochs']
+        iou_threshold = config['iou_threshold']
+        lambda_coord = config['lambda_coord']
+        lambda_noobj = config['lambda_noobj']
+        epsilon = float(config['epsilon'])
+        lambda_kpt = config['lambda_kpt']
+        lambda_kpt_conf = config['lambda_kpt_conf']
+        shuffle_data = config['shuffle_data']
+        num_workers = config['num_workers']
+        drop_last = config['drop_last']
+        optimizer = config['optimizer']
+        learning_rate = config['learning_rate']
+        lr_momentum = config['lr_momentum']
+        scheduler = config['scheduler']
+    except Exception as e:
+        print(f"{e}")
+
+    # Dataloaders
+    dataloaders, dataset_sizes = get_dataloaders(data_dir,
+                                             S,
+                                             nc,
+                                             nkpt,
+                                             cell_relative,
+                                             require_kpt_conf,
+                                             batch_size,
+                                             shuffle_data,
+                                             num_workers,
+                                             drop_last
+                                            )
+
+    # Device
+    DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+    model = TransferNetwork(
+        repo_or_dir=REPO,
+        model_name=model_name,
+        weights=weights,
+        S=S,
+        B=B,
+        nkpt=nkpt,
+        nc=nc,
+        input_size=input_size,
+        require_kpt_conf=require_kpt_conf,
+        freeze_weights=freeze_weights
+    ).to(DEVICE)
+
+    print(model.summary())
+
+    history = train_model(dataloaders,
+                dataset_sizes,
+                model,
+                loss_fn,   
+                num_epochs=num_epochs,
+                S=S,
+                B=B,
+                nkpt=nkpt,
+                nc=nc,
+                require_kpt_conf=require_kpt_conf,
+                iou_threshold=iou_threshold,
+                lambda_coord=lambda_coord,
+                lambda_noobj=lambda_noobj,
+                epsilon=epsilon,
+                lambda_kpt=lambda_kpt,
+                lambda_kpt_conf=lambda_kpt_conf,
+                verbose=verbose,
+                save_model_path=save_model_path,
+                optimizer=optimizer,
+                learning_rate=learning_rate,
+                lr_momentum=lr_momentum,
+                scheduler=scheduler
+               )

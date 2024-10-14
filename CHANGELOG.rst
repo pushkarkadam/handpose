@@ -9,6 +9,36 @@ and this project adheres to `Semantic Versioning`_.
 .. _Keep a Changelog: https://keepachangelog.com/en/1.0.0/
 .. _Semantic Versioning: https://semver.org/spec/v2.0.0.html
 
+[0.1.13] - 2024-10-14
+---------------------
+
+Added
+^^^^^
+- MSE loss for classes.
+- Euclidean distance for keypoints.
+- Using ``figsize`` as parameter in ``display_images_in_grid()`` function.
+- Updated keypoint loss function.
+- Options to use the exponent of sum of all the mse for keypoints.
+- Detect function added.
+- Render detection function added.
+- CSV files saving for losses added in training.
+- Options to include the loss types in training.
+- Saving sample rendered images for truth and prediction.
+- Average Precision calculation function.
+- Precision and Recall curve function.
+- Mean average precision function also returns precision, recall, and F score for class.
+- Function to setup the job and train network from YAML file added.
+- Example code added to train the overall network with job setup from config file.
+
+Fixed
+^^^^^
+- Mean Average Precision calculation fixed.
+
+Removed
+-------
+- Saving dictionary of results.
+- Confusion matrix for each batch size.
+
 [0.1.11] - 2024-08-04
 ---------------------
 

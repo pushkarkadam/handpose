@@ -1,0 +1,29 @@
+REPO : 'pytorch/vision:v0.17.1'
+S : 9
+B : 4
+nkpt : 21
+nkpt_dim : 3
+nc : 2
+batch_size : 8
+cell_relative : True
+input_size : [3, 224, 224]
+require_kpt_conf : True
+weights : 'ResNet18_Weights.IMAGENET1K_V1'
+model_name : 'resnet18'
+freeze_weights : True
+data_dir : '../data/dev'
+save_model_path : '../data/runs'
+num_epochs : 1
+iou_threshold : 0.5
+lambda_coord : 5
+lambda_noobj : 0.5
+epsilon : 1e-6
+lambda_kpt : 1
+lambda_kpt_conf : 1
+shuffle_data: True
+num_workers: 4
+drop_last: True
+optimizer: 'default'
+learning_rate: 0.01
+lr_momentum: 0.9
+scheduler: 'default'

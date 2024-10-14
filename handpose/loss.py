@@ -77,7 +77,7 @@ def box_loss(box_truth, box_pred, obj_conf, lambda_coord, epsilon=1e-6):
 
     loss = torch.tensor(lambda_coord).to(DEVICE) * ((xd + yd) + (wd + hd))
 
-    return loss / batch_size
+    return loss / torch.tensor(batch_size).to(DEVICE)
 
 def conf_loss(conf_truth, conf_pred, lambda_noobj):
     r"""Confidence loss.
@@ -125,7 +125,7 @@ def conf_loss(conf_truth, conf_pred, lambda_noobj):
 
     loss = obj_loss + torch.tensor(lambda_noobj).to(DEVICE) * noobj_loss
 
-    return loss / batch_size
+    return loss / torch.tensor(batch_size).to(DEVICE)
 
 def class_loss(classes_truth, classes_pred, obj_conf, lambda_class=0.05):
     r"""Class loss.
@@ -172,9 +172,135 @@ def class_loss(classes_truth, classes_pred, obj_conf, lambda_class=0.05):
 
     loss = bce_loss(cp * obj_indicator, ct * obj_indicator)
 
-    return (torch.tensor(lambda_class).to(DEVICE) * loss) / batch_size
+    return (torch.tensor(lambda_class).to(DEVICE) * loss) / torch.tensor(batch_size).to(DEVICE)
 
-def kpt_loss(kpt_truth, kpt_pred, obj_conf, lambda_kpt=0.5):
+def class_loss_mse(classes_truth, classes_pred, obj_conf, lambda_class=1):
+    r"""Class loss using regression.
+
+    .. math::
+
+        loss_{class} = \sum_{i = 0}^{S^2}
+        1_i^{\text{obj}}
+            \sum_{c \in \textrm{classes}}
+                \left(
+                    p_i(c) - \hat{p}_i(c)
+                \right)^2
+    
+    
+    Parameters
+    ----------
+    classes_truth: torch.Tensor
+        A tensor of truth classes.
+    classes_pred: torch.Tensor
+        A tensor of prediction classes.
+    obj_conf: torch.Tensor
+        A tensor of object confidence from ground truth.
+
+    Returns
+    -------
+    torch.tensor
+    
+    """
+
+    ct = classes_truth
+    cp = classes_pred
+    obj_indicator = obj_conf
+
+    # Extracting batch size
+    batch_size = ct.size(0)
+
+    # Mean square error 
+    mse = torch.nn.MSELoss(reduction="sum")
+
+    loss = mse(ct * obj_indicator, cp * obj_indicator)
+    
+    return (torch.tensor(lambda_class).to(DEVICE) * loss) / torch.tensor(batch_size).to(DEVICE)
+
+def kpt_loss(kpt_truth, kpt_pred, obj_conf, lambda_kpt=0.5, sum_exp=True):
+    r"""Keypoint loss.
+
+    Keypoint loss that uses mean square error.
+
+    .. math::
+        L_{kpt} = \sum_{i=0}^{S^2} \sum_{j=0}^{B} 1_{ij}^{\text{obj}} \left[ \frac{ (kx_i - \hat{kx}_i)^2 + (ky_i - \hat{ky}_i)^2}{2} \right] \\
+
+    Parameters
+    ----------
+    kpt_truth: dict
+        A dictionary of truth keypoints
+    kpt_pred: dict
+        A dictionary of prediction keypoints
+    obj_conf: torch.Tensor
+        A torch tensor of size ``(m, 1, S, S)``
+    lambda_kpt: float, default ``0.5``
+        A multiplier.
+    sum_exp: bool, default ``True``
+        Sums up all the MSE and uses the negative exponent.
+        If not, then uses the formula that takes the exponent of every mse euclidean distance.
+
+    Returns
+    -------
+    torch.tensor
+
+    Examples
+    --------
+    >>> kpt_truth = {'kx_0': torch.Tensor([[0,0,0],[0,0.5,0], [0,0,0]]).reshape(1,1,3,3),
+             'ky_0': torch.Tensor([[0,0,0],[0,0.5,0], [0,0,0]]).reshape(1,1,3,3),
+             'kx_1': torch.Tensor([[0,0,0],[0,0.2,0], [0,0,0]]).reshape(1,1,3,3),
+             'ky_1': torch.Tensor([[0,0,0],[0,0.2,0], [0,0,0]]).reshape(1,1,3,3),
+            }
+    >>> kpt_pred = {'kx_0': torch.Tensor([[0,0,0],[0,0.5,0], [0,0,0]]).reshape(1,1,3,3),
+             'ky_0': torch.Tensor([[0,0,0],[0,0.5,0], [0,0,0]]).reshape(1,1,3,3),
+             'kx_1': torch.Tensor([[0,0,0],[0,0.2,0], [0,0,0]]).reshape(1,1,3,3),
+             'ky_1': torch.Tensor([[0,0,0],[0,0.2,0], [0,0,0]]).reshape(1,1,3,3),
+            }
+    >>> obj_conf = torch.Tensor([[0,0,0],[0,1,0],[0,0,0]]).reshape(1,1,3,3)
+    >>> loss = kpt_loss(kpt_truth, kpt_pred, obj_conf, nkpt)
+    
+    """
+
+    d = torch.tensor(0.0).to(DEVICE)
+
+    nkpt = int(len(list(kpt_truth.keys())) / 2)
+    nkpt_pred = int(len(list(kpt_truth.keys())) / 2)
+
+    try:
+        assert(nkpt == nkpt_pred)
+    except Exception as e:
+        print("\033[91m" + "Mismatch keypoints from truth and prediction.")
+        print("\033[91m"+ f"Truth keypoints {nkpt} != Prediction keypoitns {nkpt_pred}")
+        raise
+
+    obj_indicator = obj_conf.to(DEVICE)
+    mse = torch.nn.MSELoss(reduction="sum")
+
+    batch_size = obj_conf.size(0)
+    
+    for i in range(nkpt):
+        # truth tensor
+        kx_truth = kpt_truth[f'kx_{i}']
+        ky_truth = kpt_truth[f'ky_{i}']
+
+        # prediction tensors
+        kx_pred = kpt_pred[f'kx_{i}'] * obj_indicator
+        ky_pred = kpt_pred[f'ky_{i}'] * obj_indicator
+
+        dx = mse(kx_truth, kx_pred)
+        dy = mse(ky_truth, ky_pred)
+        
+        if sum_exp:
+            d += (dx + dy)
+        else:
+            d += torch.exp(-(dx+dy)/ torch.tensor(1).to(DEVICE)) / torch.tensor(nkpt).to(DEVICE)
+
+    if sum_exp:
+        loss = torch.tensor(1).to(DEVICE) - torch.exp(-d)
+    else:
+        loss = torch.tensor(1).to(DEVICE) - d
+
+    return (torch.tensor(lambda_kpt).to(DEVICE) * loss) / torch.tensor(batch_size).to(DEVICE)
+
+def kpt_loss_euclidean(kpt_truth, kpt_pred, obj_conf, lambda_kpt=0.5):
     r"""Keypoint loss.
 
     Keypoint loss that uses mean square error.
@@ -216,6 +342,8 @@ def kpt_loss(kpt_truth, kpt_pred, obj_conf, lambda_kpt=0.5):
 
     loss = torch.tensor(0.0).to(DEVICE)
 
+    epsilon = torch.tensor(1e-6).to(DEVICE)
+
     nkpt = int(len(list(kpt_truth.keys())) / 2)
     nkpt_pred = int(len(list(kpt_truth.keys())) / 2)
 
@@ -243,9 +371,9 @@ def kpt_loss(kpt_truth, kpt_pred, obj_conf, lambda_kpt=0.5):
         dx = mse(kx_truth, kx_pred)
         dy = mse(ky_truth, ky_pred)
 
-        loss +=  (dx + dy) / torch.tensor(2.0).to(DEVICE)
+        loss += (torch.square(dx) + torch.square(dy))
 
-    return (torch.tensor(lambda_kpt).to(DEVICE) * loss) / batch_size
+    return (torch.tensor(lambda_kpt).to(DEVICE) * loss) / torch.tensor(batch_size).to(DEVICE)
 
 def kpt_conf_loss(k_conf_truth, k_conf_pred, obj_conf, lambda_kpt_conf=1):
     r"""Calculates the loss of keypoint confidence.
@@ -305,7 +433,7 @@ def kpt_conf_loss(k_conf_truth, k_conf_pred, obj_conf, lambda_kpt_conf=1):
 
         loss += mse(conf_truth, conf_pred)
 
-    return (torch.tensor(lambda_kpt_conf).to(DEVICE) * loss) / batch_size
+    return (torch.tensor(lambda_kpt_conf).to(DEVICE) * loss) / torch.tensor(batch_size).to(DEVICE)
 
 def loss_fn(truth, prediction, lambda_coord=5, lambda_noobj=0.5, epsilon=1e-6, lambda_kpt=0.5, lambda_kpt_conf=0.5):
     r"""Computes loss and returns a dictionary of all the losses.
@@ -402,16 +530,17 @@ def loss_fn(truth, prediction, lambda_coord=5, lambda_noobj=0.5, epsilon=1e-6, l
     L_conf = conf_loss(conf_truth=conf_truth, conf_pred=conf_pred, lambda_noobj=lambda_noobj)
 
     # class loss 
-    L_class = class_loss(classes_truth=classes_truth, classes_pred=classes_pred, obj_conf=conf_truth)
+    L_class = class_loss_mse(classes_truth=classes_truth, classes_pred=classes_pred, obj_conf=conf_truth)
 
     # keypoint loss
+    # L_kpt = kpt_loss_euclidean(kpt_truth=kpt_truth, kpt_pred=kpt_pred, obj_conf=conf_truth, lambda_kpt=lambda_kpt)
     L_kpt = kpt_loss(kpt_truth=kpt_truth, kpt_pred=kpt_pred, obj_conf=conf_truth, lambda_kpt=lambda_kpt)
 
     # keypoint confidence loss 
     L_kpt_conf = kpt_conf_loss(k_conf_truth=kpt_conf_truth, k_conf_pred=kpt_conf_pred, obj_conf=conf_truth, lambda_kpt_conf=lambda_kpt_conf)
 
     # Adding all the losses
-    loss = L_box + L_conf + L_class + L_kpt + L_kpt_conf
+    loss = L_box + L_conf + L_class + L_kpt
 
     all_losses = {'total_loss': loss.to(DEVICE), 
                   'box_loss': L_box.to(DEVICE),
