@@ -27,6 +27,8 @@ Added
 - Average Precision calculation function.
 - Precision and Recall curve function.
 - Mean average precision function also returns precision, recall, and F score for class.
+- Function to setup the job and train network from YAML file added.
+- Example code added to train the overall network with job setup from config file.
 
 Fixed
 ^^^^^
