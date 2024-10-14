@@ -331,3 +331,96 @@ def train_model(dataloaders,
                       )
       
     return history
+
+def train_network(config, verbose=True):
+    """Trains the network."""
+
+    config = load_variables('config.yaml')
+
+    try:
+        REPO = config['REPO']
+        S = config['S']
+        B = config['B']
+        nkpt = config['nkpt']
+        nkpt_dim = config['nkpt_dim']
+        nc = config['nc']
+        batch_size = config['batch_size']
+        cell_relative = config['cell_relative']
+        input_size = tuple(config['input_size'])
+        require_kpt_conf = config['require_kpt_conf']
+        weights = config['weights']
+        model_name = config['model_name']
+        freeze_weights = config['freeze_weights']
+        data_dir = config['data_dir']
+        save_model_path = config['save_model_path']
+        num_epochs = config['num_epochs']
+        iou_threshold = config['iou_threshold']
+        lambda_coord = config['lambda_coord']
+        lambda_noobj = config['lambda_noobj']
+        epsilon = float(config['epsilon'])
+        lambda_kpt = config['lambda_kpt']
+        lambda_kpt_conf = config['lambda_kpt_conf']
+        shuffle_data = config['shuffle_data']
+        num_workers = config['num_workers']
+        drop_last = config['drop_last']
+        optimizer = config['optimizer']
+        learning_rate = config['learning_rate']
+        lr_momentum = config['lr_momentum']
+        scheduler = config['scheduler']
+    except Exception as e:
+        print(f"{e}")
+
+    # Dataloaders
+    dataloaders, dataset_sizes = get_dataloaders(data_dir,
+                                             S,
+                                             nc,
+                                             nkpt,
+                                             cell_relative,
+                                             require_kpt_conf,
+                                             batch_size,
+                                             shuffle_data,
+                                             num_workers,
+                                             drop_last
+                                            )
+
+    # Device
+    DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+    model = TransferNetwork(
+        repo_or_dir=REPO,
+        model_name=model_name,
+        weights=weights,
+        S=S,
+        B=B,
+        nkpt=nkpt,
+        nc=nc,
+        input_size=input_size,
+        require_kpt_conf=require_kpt_conf,
+        freeze_weights=freeze_weights
+    ).to(DEVICE)
+
+    print(model.summary())
+
+    history = train_model(dataloaders,
+                dataset_sizes,
+                model,
+                loss_fn,   
+                num_epochs=num_epochs,
+                S=S,
+                B=B,
+                nkpt=nkpt,
+                nc=nc,
+                require_kpt_conf=require_kpt_conf,
+                iou_threshold=iou_threshold,
+                lambda_coord=lambda_coord,
+                lambda_noobj=lambda_noobj,
+                epsilon=epsilon,
+                lambda_kpt=lambda_kpt,
+                lambda_kpt_conf=lambda_kpt_conf,
+                verbose=verbose,
+                save_model_path=save_model_path,
+                optimizer=optimizer,
+                learning_rate=learning_rate,
+                lr_momentum=lr_momentum,
+                scheduler=scheduler
+               )
