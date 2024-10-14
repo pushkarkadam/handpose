@@ -333,12 +333,15 @@ def train_model(dataloaders,
     return history
 
 def train_network(config, verbose=True):
-    """Sets up the job using the parameters in the config file.
+    r"""Sets up the job using the parameters in the config file.
     
     This is the overall train function that does the job of setting up the dataloders and the computer settings
     to run the training programme.
 
     The results are stored in the directory mentioned in the config file.
+    This function is different from
+    :func:`handpose.train.train_model`
+    in a way that ``train_model()`` does not setup the job.
     
     Parameters
     ----------
