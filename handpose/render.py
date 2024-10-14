@@ -144,7 +144,7 @@ def render_pose(images, head, is_relative=True, show_keypoint_label=True, classe
 
     return rendered_images
 
-def display_images_in_grid(rendered_images, grid_shape=None, save_path=None, figsize=(12,6)):
+def display_images_in_grid(rendered_images, grid_shape=None, save_path=None, figsize=(12,6), show_image=False):
     """Displays rendered images in grid.
 
     Parameters
@@ -180,8 +180,9 @@ def display_images_in_grid(rendered_images, grid_shape=None, save_path=None, fig
 
     if save_path is not None:
         plt.savefig(save_path, bbox_inches='tight', pad_inches=0)
-        
-    plt.show()
+    
+    if show_image:
+        plt.show()
 
 def render_detection(images, 
                      head, 
