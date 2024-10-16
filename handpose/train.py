@@ -352,7 +352,7 @@ def train_network(config, verbose=True):
 
     """
 
-    config = load_variables('config.yaml')
+    config = load_variables(config)
 
     try:
         REPO = config['REPO']
