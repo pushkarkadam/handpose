@@ -378,10 +378,14 @@ def create_train_dir(save_model_path):
         Path to store weights.
         
     """
+    if not os.path.exists(save_model_path):
+        os.makedirs(save_model_path)
+    
     dirs = os.listdir(save_model_path)
 
     if not dirs:
-        os.makedirs(os.path.join(save_model_path, 'train1'))
+        train_dir_name = os.path.join(save_model_path, 'train1')
+        os.makedirs(train_dir_name)
     else:
         train_nums = []
 
