@@ -368,3 +368,28 @@ def detect(image, model, require_kpt_conf, S, B, nkpt, nc, iou_threshold):
     head_nms = non_max_suppression(head)
 
     return head, head_nms
+
+def create_train_dir(save_model_path):
+    """Creates a directory for training results.
+
+    Parameters
+    ----------
+    save_model_path: str
+        Path to store weights.
+        
+    """
+    dirs = os.listdir(save_model_path)
+
+    if not dirs:
+        os.makedirs(os.path.join(save_model_path, 'train1'))
+    else:
+        train_nums = []
+
+        for d in dirs:
+            train_nums.append(int(re.findall('\d+', d)[0]))
+        
+        train_nums.sort()
+
+        last_train_num = train_nums.pop()
+
+        os.makedirs(os.path.join(save_model_path, 'train' + str(last_train_num + 1)))
