@@ -392,4 +392,8 @@ def create_train_dir(save_model_path):
 
         last_train_num = train_nums.pop()
 
-        os.makedirs(os.path.join(save_model_path, 'train' + str(last_train_num + 1)))
+        train_dir_name = os.path.join(save_model_path, 'train' + str(last_train_num + 1))
+
+        os.makedirs(train_dir_name)
+
+    return train_dir_name
