@@ -114,9 +114,9 @@ def train_model(dataloaders,
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     if save_model_path:
-        timestamp = str(int(since))
-        train_dir = train_dir + '_' + timestamp
-        train_path = os.path.join(save_model_path, train_dir)
+        # Creating training directory
+        train_path = create_train_dir(save_model_path)
+        print(f"Created a new directory at {train_path}")
 
         # Last model path to save model after every epoch
         last_model_path = os.path.join(train_path, 'last.pt')
@@ -273,9 +273,9 @@ def train_model(dataloaders,
                 print(f"mAP: {mAP_epoch}")
 
             if save_model_path:
-                if not os.path.exists(train_path):
-                    os.makedirs(train_path)
-                    print(f'New directory {train_dir} created at {train_path}')
+                # if not os.path.exists(train_path):
+                #     os.makedirs(train_path)
+                #     print(f'New directory {train_dir} created at {train_path}')
 
                 torch.save(model.state_dict(), last_model_path)
 
