@@ -1,5 +1,7 @@
 import yaml
 import torch
+import os
+import re
 
 def load_variables(file_path):
     """Loads variables from a YAML file.
@@ -383,6 +385,7 @@ def create_train_dir(save_model_path):
     
     dirs = os.listdir(save_model_path)
 
+    # If the directory is empty hard code to create 'train1'
     if not dirs:
         train_dir_name = os.path.join(save_model_path, 'train1')
         os.makedirs(train_dir_name)
@@ -390,14 +393,23 @@ def create_train_dir(save_model_path):
         train_nums = []
 
         for d in dirs:
-            train_nums.append(int(re.findall('\d+', d)[0]))
-        
-        train_nums.sort()
+            d_train = re.findall('train\d+', d)
+            if d_train:
+                train_nums.append(int(re.findall('\d+', d)[0]))
 
-        last_train_num = train_nums.pop()
+        # If train_nums is empty list i.e. no train# was found
+        # Hard code to create 'train1'
+        if not train_nums:
+            train_dir_name = os.path.join(save_model_path, 'train1')
+            os.makedirs(train_dir_name)
+        else:
+            train_nums.sort()
 
-        train_dir_name = os.path.join(save_model_path, 'train' + str(last_train_num + 1))
+            # Removes the last number from train_nums
+            last_train_num = train_nums.pop()
 
-        os.makedirs(train_dir_name)
+            train_dir_name = os.path.join(save_model_path, 'train' + str(last_train_num + 1))
+
+            os.makedirs(train_dir_name)
 
     return train_dir_name
