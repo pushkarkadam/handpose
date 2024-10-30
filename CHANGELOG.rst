@@ -15,6 +15,7 @@ and this project adheres to `Semantic Versioning`_.
 Added
 ^^^^^
 - Create train directory with sequential numbering.
+- Saving loss csv file for each epoch.
 
 
 [0.1.14] - 2024-10-16
