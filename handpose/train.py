@@ -273,10 +273,6 @@ def train_model(dataloaders,
                 print(f"mAP: {mAP_epoch}")
 
             if save_model_path:
-                # if not os.path.exists(train_path):
-                #     os.makedirs(train_path)
-                #     print(f'New directory {train_dir} created at {train_path}')
-
                 torch.save(model.state_dict(), last_model_path)
 
     time_elapsed = time.time() - since
