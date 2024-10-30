@@ -113,6 +113,12 @@ def train_model(dataloaders,
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
+    # Dataframe for losses
+    # train_loss_df = pd.DataFrame(plot_history['train'])
+    # valid_loss_df = pd.DataFrame(plot_history['valid'])
+
+    loss_df = {'train': pd.DataFrame(), 'valid': pd.DataFrame()}
+
     if save_model_path:
         # Creating training directory
         train_path = create_train_dir(save_model_path)
@@ -257,6 +263,12 @@ def train_model(dataloaders,
                 epoch_losses[k] = epoch_loss
                 all_losses[phase][k].append(epoch_loss)
 
+            # Append all_losses to dataframe here
+            loss_df[phase] = loss_df[phase].from_dict(all_losses[phase])
+
+            if save_model_path:
+                loss_df[phase].to_csv(os.path.join(train_path, f'{phase}_loss.csv'), index=False)
+
             mAP_epoch = mAP / dataset_sizes[phase]
             epochs_mAP[phase].append(mAP_epoch)
 
@@ -308,13 +320,6 @@ def train_model(dataloaders,
             plot_single_history(mAP_plot_history, root_path=train_path, save_path_prefix='', xlabel='Epoch', ylabel='mAP')
 
         plot_all_history(loss_history, root_path=train_path)
-
-        # CSV files
-        train_loss_df = pd.DataFrame(plot_history['train'])
-        valid_loss_df = pd.DataFrame(plot_history['valid'])
-
-        train_loss_df.to_csv(os.path.join(train_path, 'train_loss.csv'), index=False)
-        valid_loss_df.to_csv(os.path.join(train_path, 'valid_loss.csv'), index=False)
 
         # Save sample images
         save_sample_images(images, 
