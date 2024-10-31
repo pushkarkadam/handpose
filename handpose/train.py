@@ -113,10 +113,6 @@ def train_model(dataloaders,
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-    # Dataframe for losses
-    # train_loss_df = pd.DataFrame(plot_history['train'])
-    # valid_loss_df = pd.DataFrame(plot_history['valid'])
-
     loss_df = {'train': pd.DataFrame(), 'valid': pd.DataFrame()}
 
     if save_model_path:
