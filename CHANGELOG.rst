@@ -16,6 +16,7 @@ Added
 ^^^^^
 - Create train directory with sequential numbering.
 - Saving loss csv file for each epoch.
+- Improved verbose metrics display during training.
 
 
 [0.1.14] - 2024-10-16
