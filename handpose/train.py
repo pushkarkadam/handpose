@@ -273,16 +273,15 @@ def train_model(dataloaders,
             epochs_mAP[phase].append(mAP_epoch)
 
             if verbose:
+                print('\n')
                 print(f'{phase}')
                 print('-' * len(str(phase)))
-                for k,v in epoch_losses.items():
-                    print(f'{k}: {v:.3f}')
-                print("\n")
 
-                # printing mAP
-                print("Metrics")
-                print('-' * len("Metrics"))
-                print(f"mAP: {mAP_epoch}")
+                df_metrics = loss_df[phase].iloc[-1:].copy()
+
+                df_metrics.loc[:, f'mAP{int(iou_threshold * 100)}'] = [mAP_epoch]
+
+                print(df_metrics)
 
             if save_model_path:
                 torch.save(model.state_dict(), last_model_path)
