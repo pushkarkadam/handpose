@@ -37,7 +37,8 @@ def train_model(dataloaders,
                 scheduler='default',
                 individual_plots=False,
                 losses_types=["total_loss", "box_loss", "conf_loss", "class_loss", "kpt_loss"],
-                sample_grid_shape=(2,4)
+                sample_grid_shape=(2,4),
+                **kwargs
                ):
     r"""Training function.
     
@@ -108,17 +109,27 @@ def train_model(dataloaders,
     
     """
 
+    if kwargs:
+        resume_training = kwargs['resume_training']
+        loss_df = kwargs['loss_df']
+        train_path = kwargs['train_save_path']
+        epochs_passed, _ = loss_df['train'].shape
+
+    else:
+        resume_training = False
+        epochs_passed = 0
+        loss_df = {'train': pd.DataFrame(), 'valid': pd.DataFrame()}
+
     # Record start time
     since = time.time()
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-    loss_df = {'train': pd.DataFrame(), 'valid': pd.DataFrame()}
-
     if save_model_path:
-        # Creating training directory
-        train_path = create_train_dir(save_model_path)
-        print(f"Created a new directory at {train_path}")
+        if not resume_training:
+            # Creating training directory
+            train_path = create_train_dir(save_model_path)
+            print(f"Created a new directory at {train_path}")
 
         # Last model path to save model after every epoch
         last_model_path = os.path.join(train_path, 'last.pt')
@@ -133,6 +144,12 @@ def train_model(dataloaders,
     valid_losses = copy.deepcopy(losses)
 
     all_losses = {'train': losses, 'valid': valid_losses}
+
+    # If resume training is true populate the previous losses in the all_losses dict
+    if resume_training:
+        for phase in all_losses:
+            for c in loss_df[phase].columns:
+                all_losses[phase][c] = list(loss_df[phase][c])
     
     eval_metrics = dict()
 
@@ -150,7 +167,7 @@ def train_model(dataloaders,
         scheduler = Scheduler(optimizer, lr_scheduler.StepLR ,**{'step_size': 7, 'gamma': 0.1}).scheduler
         
     
-    for epoch in tqdm(range(num_epochs), unit='batch', total=num_epochs):
+    for epoch in tqdm(range(epochs_passed, num_epochs), unit='batch', total=num_epochs):
         if verbose:
             print('\n\n')
             print('=' * len(f"Epoch: {epoch + 1}"))
@@ -314,7 +331,9 @@ def train_model(dataloaders,
 
             plot_single_history(mAP_plot_history, root_path=train_path, save_path_prefix='', xlabel='Epoch', ylabel='mAP')
 
-        plot_all_history(loss_history, root_path=train_path)
+        # plot_all_history(loss_history, root_path=train_path)
+
+        plot_loss(loss_df, root_path=train_path)
 
         # Save sample images
         save_sample_images(images, 
