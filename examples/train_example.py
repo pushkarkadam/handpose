@@ -11,4 +11,4 @@ if (len(sys.argv) != 2):
 
 config_file = sys.argv[1]
 
-train_network(config_file)
+start_training(config_file)
