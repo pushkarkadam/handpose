@@ -9,6 +9,22 @@ and this project adheres to `Semantic Versioning`_.
 .. _Keep a Changelog: https://keepachangelog.com/en/1.0.0/
 .. _Semantic Versioning: https://semver.org/spec/v2.0.0.html
 
+[0.1.15] - 2024-11-03
+---------------------
+
+Added
+^^^^^
+- Create train directory with sequential numbering.
+- Improved verbose metrics display during training.
+- Resume training function.
+- Example with command line variables for training and resume training.
+
+Changed
+^^^^^^^
+- Saving loss csv file for each epoch in training model.
+- Training model with control flow of resume training.
+- Plot loss graphs from dataframe function.
+
 [0.1.14] - 2024-10-16
 ---------------------
 
@@ -42,7 +58,7 @@ Fixed
 - Mean Average Precision calculation fixed.
 
 Removed
--------
+^^^^^^^
 - Saving dictionary of results.
 - Confusion matrix for each batch size.
 

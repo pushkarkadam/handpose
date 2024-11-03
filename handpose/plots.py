@@ -86,3 +86,27 @@ def plot_all_history(history, root_path='./', plot_name='loss_plot.png', xlabel=
     plot_save_path = os.path.join(root_path, plot_name)
     plt.savefig(plot_save_path)
     plt.close()
+
+def plot_loss(loss_df, root_path='./', plot_name='loss_plot.png', xlabel='Epoch', ylabel='Loss'):
+    """Plots graph from the dataframe"""
+
+    # create subplots
+    fig, axes = plt.subplots(2, len(loss_df['train'].columns), figsize=(12, 6))
+
+    # plot 'train' and 'valid' graphs
+    for idx, phase in enumerate(loss_df):
+        plot_df = loss_df[phase]
+        for i, col in enumerate(plot_df.columns):
+            axes[idx, i].plot(list(loss_df[phase][col]), label=phase, marker='o')
+            axes[idx, i].set_title(f'{phase}: {col}')
+            axes[idx, i].set_xlabel(xlabel)
+            axes[idx, i].set_ylabel(ylabel)
+            axes[idx, i].grid()
+
+    # Adjust layout
+    plt.tight_layout()
+
+    # Save plot as an iamge
+    plot_save_path = os.path.join(root_path, plot_name)
+    plt.savefig(plot_save_path)
+    plt.close()
