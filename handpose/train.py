@@ -462,20 +462,20 @@ def resume_training(train_dir, config_file, verbose=True):
     r"""Restarts training from the last checkpoint.
     
     This function will continue the training where it was left off before.
-    The function uses `train_loss.csv` and `valid_loss.csv` from the `train#` directory.
-    It recounts the total number of epochs from `config.yaml` file and subtracts the epochs passed.
-    If the training has already passed the number of epochs, then update the `config.yaml` file increase the number of epochs.
+    The function uses ``train_loss.csv`` and ``valid_loss.csv`` from the ``train#`` directory.
+    It recounts the total number of epochs from ``config.yaml`` file and subtracts the epochs passed.
+    If the training has already passed the number of epochs, then update the ``config.yaml`` file increase the number of epochs.
 
     Parameters
     ----------
     train_dir: str
         Path where the training directory was created.
-        This will be inside `data/runs/` directory but can be at any other location.
+        This will be inside ``data/runs/`` directory but can be at any other location.
     config_file: str
         Path to the same config file that was used to begin the first instance of training.
         Make sure to not change the values such as box numbers or grid size in the config file
         as it make cause problem with dimension on resuming training.
-    verbose: bool
+    verbose: bool, default ``True``
         Prints the training outcome.
     
     """
