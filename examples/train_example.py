@@ -5,7 +5,7 @@ sys.path.append('../')
 from handpose import *
 
 
-def main() -> int:
+def main():
     train_network('config.yaml')
 
 if __name__ == '__main__':
