@@ -348,7 +348,7 @@ def train_model(dataloaders,
       
     return history
 
-def train_network(config, verbose=True):
+def start_training(config, verbose=True):
     r"""Sets up the job using the parameters in the config file.
     
     This is the overall train function that does the job of setting up the dataloders and the computer settings
