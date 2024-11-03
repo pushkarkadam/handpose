@@ -5,8 +5,10 @@ sys.path.append('../')
 from handpose import *
 
 
-def main() -> int:
-    train_network('config.yaml')
+if (len(sys.argv) != 2):
+    print("Usage: python train_example.py ~/path/to/config.yaml")
+    sys.exit(1)
 
-if __name__ == '__main__':
-    sys.exit(main())
+config_file = sys.argv[1]
+
+train_network(config_file)
