@@ -9,6 +9,13 @@ and this project adheres to `Semantic Versioning`_.
 .. _Keep a Changelog: https://keepachangelog.com/en/1.0.0/
 .. _Semantic Versioning: https://semver.org/spec/v2.0.0.html
 
+[0.1.16] - 2024-11-14
+---------------------
+
+Added
+^^^^^
+- Verbose to indicate device used.
+
 [0.1.15] - 2024-11-03
 ---------------------
 
