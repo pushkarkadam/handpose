@@ -166,6 +166,9 @@ def train_model(dataloaders,
         if verbose:
             print('Using default scheduler with step_size=7 and gamma=0.1')
         scheduler = Scheduler(optimizer, lr_scheduler.StepLR ,**{'step_size': 7, 'gamma': 0.1}).scheduler
+
+    if verbose:
+        print(f'Using device: {device.type}')
         
     
     for epoch in tqdm(range(epochs_passed, num_epochs), unit='batch', total=num_epochs):
