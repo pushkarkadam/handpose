@@ -278,7 +278,11 @@ def mean_average_precision(truth, pred, iou_threshold, show_plot=False):
 
     for c in classes:
         class_index = np.where(true_labels == c)[0]
-        true_boxes = list(torch.tensor(np.array(truth['boxes'])[class_index]))
+
+        true_boxes = []
+        for ci in class_index:
+            true_box.append(truth['boxes'][ci])
+
         pred_boxes = [pred['boxes'][i] for i in class_index]
 
         prec_curve, recall_curve = pr_curve(true_boxes, pred_boxes, iou_threshold)
