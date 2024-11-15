@@ -169,8 +169,8 @@ def label_tensor(label, S, nc, nkpt, cell_relative=True, require_kpt_conf=True):
         w = l[...,3:4]
         h = l[...,4:5]
 
-        i = torch.floor(S * x).int()
-        j = torch.floor(S * y).int()
+        i = int(torch.floor(S * x))
+        j = int(torch.floor(S * y))
 
         if cell_relative:
             x = x * S - i
@@ -179,9 +179,9 @@ def label_tensor(label, S, nc, nkpt, cell_relative=True, require_kpt_conf=True):
         keypoints = l[..., 5:]
 
         class_tensor = torch.zeros(1, nc)
-        label_class = l[...,0].int()
+        label_class = int(l[...,0])
         # one-hot encoding of label_class
-        class_tensor[...,label_class] = 1
+        class_tensor[...,label_class] = torch.tensor(1)
 
         # Objectness --> relates to the IOU
         obj_conf = torch.ones(1, 1)
@@ -203,7 +203,7 @@ def label_tensor(label, S, nc, nkpt, cell_relative=True, require_kpt_conf=True):
 
         truth_label = truth_label.reshape(truth_dims[0], 1, 1)
 
-        truth_tensor[:, i, j] = truth_label
+        truth_tensor[:, i, j] = truth_label.squeeze()
     
     return truth_tensor
 
