@@ -43,6 +43,9 @@ def render_pose(images, head, is_relative=True, show_keypoint_label=True, classe
     rendered_images = []  
     
     for idx, image in enumerate(images):
+        # Ensuring the image is copied to cpu if it is on gpu
+        image = image.cpu()
+        
         # Image dimension
         _, H, W = image.shape
         
