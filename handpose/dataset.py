@@ -532,7 +532,8 @@ def get_dataloaders(data_dir,
                     batch_size,
                     shuffle_data,
                     num_workers,
-                    drop_last
+                    drop_last,
+                    pin_memory
                    ):
     r"""Returns Dataloaders.
     
