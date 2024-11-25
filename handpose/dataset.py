@@ -559,6 +559,8 @@ def get_dataloaders(data_dir,
         Number of threads used for training.
     drop_last: bool
         Boolean to drop the remaining data while mini-batch training.
+    pin_memory: bool
+        Boolean that transfers data from cpu to gpu.
 
     Returns
     -------
