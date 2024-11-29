@@ -64,6 +64,9 @@ def list_files(directory):
         files = os.listdir(directory)
 
         file_names = [f for f in files if os.path.isfile(os.path.join(directory, f))]
+
+        # Sorting the filenames
+        file_names.sort()
     except Exception as e:
         print(e)
         raise
