@@ -532,7 +532,8 @@ def get_dataloaders(data_dir,
                     batch_size,
                     shuffle_data,
                     num_workers,
-                    drop_last
+                    drop_last,
+                    pin_memory
                    ):
     r"""Returns Dataloaders.
     
@@ -558,6 +559,8 @@ def get_dataloaders(data_dir,
         Number of threads used for training.
     drop_last: bool
         Boolean to drop the remaining data while mini-batch training.
+    pin_memory: bool
+        Boolean that transfers data from cpu to gpu.
 
     Returns
     -------
@@ -579,7 +582,8 @@ def get_dataloaders(data_dir,
                                                   batch_size=batch_size, 
                                                   shuffle=shuffle_data, 
                                                   num_workers=num_workers, 
-                                                  drop_last=drop_last
+                                                  drop_last=drop_last,
+                                                  pin_memory=pin_memory
                                                  ) for x in ['train', 'valid']}
 
     dataset_sizes = {x: len(image_datasets[x]) for x in ['train', 'valid']}

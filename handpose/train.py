@@ -406,6 +406,15 @@ def start_training(config, verbose=True):
     except Exception as e:
         print(f"{e}")
 
+    # Device
+    DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+    # Pin memory
+    if 'cuda' in DEVICE.type:
+        pin_memory = True
+    else:
+        pin_memory = False
+
     # Dataloaders
     dataloaders, dataset_sizes = get_dataloaders(data_dir,
                                              S,
@@ -416,11 +425,9 @@ def start_training(config, verbose=True):
                                              batch_size,
                                              shuffle_data,
                                              num_workers,
-                                             drop_last
+                                             drop_last,
+                                             pin_memory
                                             )
-
-    # Device
-    DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     model = TransferNetwork(
         repo_or_dir=REPO,
