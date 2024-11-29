@@ -582,7 +582,8 @@ def get_dataloaders(data_dir,
                                                   batch_size=batch_size, 
                                                   shuffle=shuffle_data, 
                                                   num_workers=num_workers, 
-                                                  drop_last=drop_last
+                                                  drop_last=drop_last,
+                                                  pin_memory=pin_memory
                                                  ) for x in ['train', 'valid']}
 
     dataset_sizes = {x: len(image_datasets[x]) for x in ['train', 'valid']}
