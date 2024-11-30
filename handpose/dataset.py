@@ -5,6 +5,7 @@ from torch.utils.data import Dataset
 import torchvision.transforms as transforms
 from PIL import Image
 from tqdm import tqdm
+import shutil
 
 
 def read_label(file_path):
@@ -64,6 +65,9 @@ def list_files(directory):
         files = os.listdir(directory)
 
         file_names = [f for f in files if os.path.isfile(os.path.join(directory, f))]
+
+        # Sorting the filenames
+        file_names.sort()
     except Exception as e:
         print(e)
         raise
@@ -589,3 +593,111 @@ def get_dataloaders(data_dir,
     dataset_sizes = {x: len(image_datasets[x]) for x in ['train', 'valid']}
 
     return dataloaders, dataset_sizes
+
+def reduce_data(data_path, train_size, valid_size, new_data_path):
+    """Reduces the data as per the requirement.
+    
+    Parameters
+    ----------
+    data_path: str
+        Path to the data directory.
+    train_size: int
+        The size of the train data to be extracted.
+    valid_size: int
+        The size of the valid data to be extracted.
+    new_data_path: str
+        Path to the new directory to store the data.
+
+    Examples
+    --------
+    >>> reduce_data("../data/dev", 20, 2, "trial_data")
+    
+    """
+
+    # Create directory as per the new_data_path
+    phases = ['train', 'valid']
+
+    sizes = {'train': train_size, 'valid': valid_size}
+
+    # Checking if there is a possibility of unbalanced data request
+    for ph in phases:
+        if sizes[ph] % 2 > 0:
+            print("\033[93m" + f"{ph} data size request is an odd number which may lead to unbalanced classes.")
+
+    ratio = dict()
+    for phase in phases:
+        ratio[phase] = {'left': 0, 'right': 0}
+
+    for phase in phases:
+        new_phase_path = os.path.join(new_data_path, phase)
+
+        # Creating train of valid directory as per the phase
+        os.makedirs(new_phase_path)
+
+        new_images_path = os.path.join(new_phase_path, 'images')
+        new_labels_path = os.path.join(new_phase_path, 'labels')
+
+        # Creating images and labels directory
+        os.makedirs(new_images_path)
+        os.makedirs(new_labels_path)
+
+        # Read the annotation text files using `list_files`
+
+        # Creating the data phase path
+        data_phase_path = os.path.join(data_path, phase)
+
+        # Image data path
+        data_images_path = os.path.join(data_phase_path, 'images')
+        
+        # Label data path
+        data_labels_path = os.path.join(data_phase_path, 'labels')
+
+        # Reading all the labels
+        images_list = list_files(data_images_path)
+        labels_list = list_files(data_labels_path)
+        
+
+        # Slice the train and valid annotation list using the size parameters
+        new_images_list = images_list[:sizes[phase]]
+        new_labels_list = labels_list[:sizes[phase]]
+
+        # Updating the number of classes of images
+        # left hand and right hand assigning 0
+        lh = 0
+        rh = 0
+
+        for l in new_labels_list:
+            if '_l' in l:
+                lh += 1
+            else:
+                rh += 1
+
+        ratio[phase]['left'] = lh
+        ratio[phase]['right'] = rh
+        
+        # Copy text files and images -- use tqdm for progress bar
+
+        print(f"Copying {phase} data...")
+
+        for image, label in tqdm(zip(new_images_list, new_labels_list), total=len(new_images_list), colour="green"):
+            old_image_path = os.path.join(data_images_path, image)
+            old_label_path = os.path.join(data_labels_path, label)
+
+            new_image_path = os.path.join(new_images_path, image)
+            new_label_path = os.path.join(new_labels_path, label)
+
+            shutil.copy(old_image_path, new_image_path)
+            shutil.copy(old_label_path, new_label_path)
+        
+    # Summarise the reduction data
+    print(f"Copied data successfully to {new_data_path}")
+
+    for phase in phases:
+        print("\033[95m" + f"{phase}")
+        print("\033[95m" + f'-' * len(str(phase)))
+        if ratio[phase]['left'] == ratio[phase]['right']:
+            print("\033[92m" + f"{phase} classes are balanced")
+            print("\033[92m" + f"{ratio[phase]}")
+        else:
+            print("\033[93m" + f"{phase} classes are unbalanced")
+            print("\033[93m" + f"{ratio[phase]}")

@@ -12,6 +12,10 @@ and this project adheres to `Semantic Versioning`_.
 [Unreleased]
 ------------
 
+Added
+^^^^^
+- Reduce dataset size function added.
+
 Fixed
 ^^^^^
 - Backward compatibility with torch and torchvision.
